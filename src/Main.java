@@ -43,7 +43,7 @@ public class Main {
             int longitud = leerArchivoTexto(rutaMensaje, mensaje);
 
             imagen.esconder(mensaje, longitud);
-            imagen.escribirImagen("src/salida.bmp");
+            imagen.escribirImagen("src/imgs/salida.bmp");
             System.out.println("El mensaje ha sido escondido en la imagen '" + rutaImagen + "_salida'.");
 
         } catch (Exception e) {
