@@ -97,24 +97,46 @@ public class Main {
     public static void main(String[] args) {
         InputStreamReader isr = new InputStreamReader(System.in);
         BufferedReader br = new BufferedReader(isr);
+        Boolean continuar = true;
 
         try {
-            System.out.println("Seleccione una opción: ");
-            System.out.println("1. Esconder un mensaje en una imagen.");
-            System.out.println("2. Recuperar un mensaje de una imagen.");
-            int opcion = Integer.parseInt(br.readLine());
+            while (continuar){
+                System.out.println("======================================================================================");
+                System.out.println("=============================Seleccione una opción====================================");
+                System.out.println("1. Generacion de referencias.");
+                System.out.println("2. Calcular datos buscados: número de fallas de página, porcentaje de hits, tiempos.");
+                System.out.println("3. Esconder mensaje en imagen.");
+                System.out.println("4. Recuperar mensaje de imagen.");
+                System.out.println("5. Salir.");
+                System.out.println("======================================================================================");
 
-            switch (opcion) {
-                case 1:
+
+
+                int opcion = Integer.parseInt(br.readLine());
+    
+                if (opcion==1){
+                    System.out.println("Seguimos trabajando en esto....");
+
+                }
+                else if(opcion ==2){
+                    System.out.println("Seguimos trabajando en esto....");
+                }
+                else if (opcion == 3) {
                     esconderMensajeEnImagen();
-                    break;
-                case 2:
+                }
+                else if (opcion == 4) {
                     recuperarMensajeDeImagen();
-                    break;
-                default:
+                }
+                else if (opcion ==5 ){
+                    continuar= false;
+                }
+                
+                else {
                     System.out.println("Opción no válida.");
-                    break;
+                }
+    
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
