@@ -1,16 +1,14 @@
-import java.io.InputStreamReader;
-import java.io.FileOutputStream;
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.*;
 import java.util.ArrayList;
 
 public class Main {
     private int hits;
     private int misses;
     private Imagen imagen;
-    private ArrayList<ReferenciaPagina> referencias;
+    private static ArrayList<ReferenciaPagina> referencias = new ArrayList<>();
 
-    // Método para leer un archivo de texto y devolver el mensaje como un array de caracteres
+
+    // leer un archivo de texto y devolver el mensaje como un array de caracteres
     public static int leerArchivoTexto(String ruta, char[] mensaje) {
         int longitud = 0;
         try {
@@ -26,7 +24,7 @@ public class Main {
         return longitud;
     }
 
-    // Método para esconder un mensaje en una imagen
+    // esconder un mensaje en una imagen
     public static void esconderMensajeEnImagen() {
         InputStreamReader isr = new InputStreamReader(System.in);
         BufferedReader br = new BufferedReader(isr);
@@ -51,7 +49,7 @@ public class Main {
         }
     }
 
-    // Método para recuperar un mensaje escondido en una imagen
+    // recuperar un mensaje escondido en una imagen
     public static void recuperarMensajeDeImagen() {
         InputStreamReader isr = new InputStreamReader(System.in);
         BufferedReader br = new BufferedReader(isr);
@@ -80,15 +78,111 @@ public class Main {
             e.printStackTrace();
         }
     }
+
+    // generar las referencias
+    public static void generarReferencias(int tamanioPagina, String archivoImagen, String archivoResultado) {
+        Imagen imagen = new Imagen(archivoImagen);
     
-    public void generarReferencias(int tamanioPagina, String archivoImagen){
-
+        // datos de la img
+        int ancho = imagen.getAncho();
+        int alto = imagen.getAlto();
+        int totalBytesImagen = ancho * alto * 3;  
+        int longitudMensaje = imagen.leerLongitud();    
+        int NR = (longitudMensaje * 17) + 16;  // 16B de longitud de msj + (longitud del mensaje * 8B lectura* 8Bescritura +1 del cambio)
+        int numPaginasImagen = (int) Math.ceil((double) totalBytesImagen / tamanioPagina);
+        int numPaginasMensaje = (int) Math.ceil((double) longitudMensaje / tamanioPagina);
+        int NP = (int) Math.ceil((double)((ancho * alto * 3) + longitudMensaje) / tamanioPagina);
+        // System.out.println("logitud msj: " + longitudMensaje);
+        // System.out.println("Páginas necesarias para la imagen: " + numPaginasImagen);
+        // System.out.println("Páginas necesarias para el mensaje: " + numPaginasMensaje);
+        // System.out.println("Páginas totales necesarias (NP): " + NP);
+    
+        int contadorReferencia = 0;
+        int desplazamiento = 0;
+    
+        // PASO1: leer los primeros 16 bytes para la longitud del mssj
+        for (int i = 0; i < 16; i++) {
+            int paginaVirtual = i / tamanioPagina;
+            desplazamiento = i % tamanioPagina;
+            
+            // calc de la fila y columna
+            int fila = i / (ancho * 3);
+            int columna = (i % (ancho * 3)) / 3;
+            
+            // def del color
+            String color = "";
+            if (i % 3 == 0) color= "R";
+            else if (i % 3 == 1) color = "G";
+            else color= "B";
+    
+            referencias.add(new ReferenciaPagina(paginaVirtual, desplazamiento, fila, columna, color));
+            contadorReferencia++;
+        }
+    
+        // PASO2: alternar la w del msj y la r de la img
+        int bitIndex = 0;
+        int desplazamientoMsj = 0;
+        int byteMsg = 0;
+    
+        while (contadorReferencia < NR) {
+            // escribir en el mensaje (W)
+            int paginaVirtualMsg = numPaginasImagen + (desplazamientoMsj / tamanioPagina);
+            referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj)); 
+            contadorReferencia++;
+    
+            // leer de la imagen (R) 
+            int posicionByte = 16 + bitIndex;  // desde eel byte 16
+            desplazamiento = posicionByte % tamanioPagina;
+            int paginaVirtual = posicionByte / tamanioPagina;
+            int fila = posicionByte / (ancho * 3);
+            int columna = (posicionByte % (ancho * 3)) / 3;
+            String color = "";
+            if (posicionByte % 3 == 0) color= "R";
+            else if (posicionByte % 3 == 1) color = "G";
+            else color= "B";
+            
+            referencias.add(new ReferenciaPagina(paginaVirtual, desplazamiento, fila, columna, color));
+            bitIndex++;
+            contadorReferencia++;
+    
+            // verificacion de la escritura adicional después de 8 bits
+            if (bitIndex % 8 == 0 && contadorReferencia < NR) {
+                referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj)); 
+                desplazamientoMsj++;  
+                contadorReferencia++;
+            }
+    
+            // incrementar el byte del mensaje después de completar 8 bits
+            if (bitIndex % 8 == 0) {
+                byteMsg++;
+            }
+        }
+    
+        // verificiacion de si hicimos exactamente NR referencias
+        if (contadorReferencia != NR) {
+            System.out.println("Error: No se han generado exactamente NR referencias.");
+        }
+    
+        escribirArchivoReferencias(archivoResultado, referencias, tamanioPagina, alto, ancho, NR, NP);
     }
-
-    public void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias){
-
+        
+    // escirbir las referencias generadas en un archivo
+    public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp, int nf, int nc, int nr, int np) {
+        try (FileWriter writer = new FileWriter(archivoSalida)) {
+            writer.write("TP=" + tp + "\n");
+            writer.write("NF=" + nf + "\n");
+            writer.write("NC=" + nc + "\n");
+            writer.write("NR=" + nr + "\n");
+            writer.write("NP=" + np + "\n");
+            for (ReferenciaPagina ref : referencias) {
+                writer.write(ref.toString() + "\n");
+            }
+            System.out.println("Archivo de referencias generado exitosamente en: " + archivoSalida);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }   
     }
-
+    
     public void simularPaginacion(int numMarcos, String archivoReferencias){
 
     }
@@ -115,7 +209,15 @@ public class Main {
                 int opcion = Integer.parseInt(br.readLine());
     
                 if (opcion==1){
-                    System.out.println("Seguimos trabajando en esto....");
+                    System.out.println("Ingrese el tamaño de página (en bytes): ");
+                    int tamanioPagina = Integer.parseInt(br.readLine());
+                    System.out.println("Ruta del archivo con la imagen que contiene el mensaje escondido: ");
+                    String archivoImagen = br.readLine();
+                    System.out.println("Ruta del archivo de respuesta: ");
+                    String archivoRespta = br.readLine();
+                    generarReferencias(tamanioPagina, archivoImagen, archivoRespta);
+
+                    System.out.println("El documento fue creado correctamente.");
 
                 }
                 else if(opcion ==2){

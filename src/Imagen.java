@@ -186,4 +186,14 @@ public class Imagen {
             } 
         }
    }
+
+    public int getAncho() {
+        return ancho;
+    }
+
+    public int getAlto() {
+        return alto;
+    }
+
+   
 }
