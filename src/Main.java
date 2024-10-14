@@ -212,6 +212,7 @@ public class Main {
                 if (opcion==1){
                     System.out.println("Ingrese el tamaño de página (en bytes): ");
                     int tamanioPagina = Integer.parseInt(br.readLine());
+                    //TODO hacer que solo ingrese el nombre del archivo y no la ruta
                     System.out.println("Ruta del archivo con la imagen que contiene el mensaje escondido: ");
                     String archivoImagen = br.readLine();
                     System.out.println("Ruta del archivo de respuesta: ");
@@ -223,6 +224,16 @@ public class Main {
                 }
                 else if(opcion ==2){
                     System.out.println("Seguimos trabajando en esto....");
+                    System.out.println("Ingrese el número de marcos de página: ");
+                    int numeroMarcosPagina = Integer.parseInt(br.readLine());
+                    
+                    //TODO mejorar rutas, como carpeta que se llame files
+                    System.out.println("Ingrese el nombre de marcos de página: ");
+                    String nombreDelArchivoDeReferencias = br.readLine();
+
+                    //TODO iniciar RAM Y SWAP
+
+                    
                 }
                 else if (opcion == 3) {
                     esconderMensajeEnImagen();
