@@ -47,7 +47,6 @@ public class Thread2 extends Thread {
         try {
             barrera.await();
         } catch (InterruptedException | BrokenBarrierException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 

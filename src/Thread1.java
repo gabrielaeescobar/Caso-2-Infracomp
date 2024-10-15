@@ -88,7 +88,6 @@ public class Thread1 extends Thread {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -103,7 +102,6 @@ public class Thread1 extends Thread {
         try {
             barrera.await();
         } catch (InterruptedException | BrokenBarrierException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

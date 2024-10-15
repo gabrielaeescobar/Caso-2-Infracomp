@@ -1,3 +1,4 @@
+
 //importamos librerías
 import java.io.*;
 import java.util.ArrayList;
@@ -9,7 +10,6 @@ public class Main {
     private int misses;
     private Imagen imagen;
     private static ArrayList<ReferenciaPagina> referencias = new ArrayList<>();
-
 
     // leer un archivo de texto y devolver el mensaje como un array de caracteres
     public static int leerArchivoTexto(String ruta, char[] mensaje) {
@@ -68,7 +68,7 @@ public class Main {
 
             System.out.println("Nombre del archivo para almacenar el mensaje recuperado: ");
             String salida = br.readLine();
-            
+
             // Guardar el mensaje recuperado en un archivo de texto
             try (FileOutputStream fos = new FileOutputStream(salida)) {
                 for (char c : mensaje) {
@@ -85,92 +85,101 @@ public class Main {
     // generar las referencias
     public static void generarReferencias(int tamanioPagina, String archivoImagen, String archivoResultado) {
         Imagen imagen = new Imagen(archivoImagen);
-    
+
         // datos de la img
         int ancho = imagen.getAncho();
         int alto = imagen.getAlto();
-        int totalBytesImagen = ancho * alto * 3;  
-        int longitudMensaje = imagen.leerLongitud();    
-        int NR = (longitudMensaje * 17) + 16;  // 16B de longitud de msj + (longitud del mensaje * 8B lectura* 8Bescritura +1 del cambio)
+        int totalBytesImagen = ancho * alto * 3;
+        int longitudMensaje = imagen.leerLongitud();
+        int NR = (longitudMensaje * 17) + 16; // 16B de longitud de msj + (longitud del mensaje * 8B lectura*
+                                              // 8Bescritura +1 del cambio)
         int numPaginasImagen = (int) Math.ceil((double) totalBytesImagen / tamanioPagina);
         int numPaginasMensaje = (int) Math.ceil((double) longitudMensaje / tamanioPagina);
-        int NP = (int) Math.ceil((double)((ancho * alto * 3) + longitudMensaje) / tamanioPagina);
+        int NP = (int) Math.ceil((double) ((ancho * alto * 3) + longitudMensaje) / tamanioPagina);
         // System.out.println("logitud msj: " + longitudMensaje);
         // System.out.println("Páginas necesarias para la imagen: " + numPaginasImagen);
-        // System.out.println("Páginas necesarias para el mensaje: " + numPaginasMensaje);
+        // System.out.println("Páginas necesarias para el mensaje: " +
+        // numPaginasMensaje);
         // System.out.println("Páginas totales necesarias (NP): " + NP);
-    
+
         int contadorReferencia = 0;
         int desplazamiento = 0;
-    
+
         // PASO1: leer los primeros 16 bytes para la longitud del mssj
         for (int i = 0; i < 16; i++) {
             int paginaVirtual = i / tamanioPagina;
             desplazamiento = i % tamanioPagina;
-            
+
             // calc de la fila y columna
             int fila = i / (ancho * 3);
             int columna = (i % (ancho * 3)) / 3;
-            
+
             // def del color
             String color = "";
-            if (i % 3 == 0) color= "R";
-            else if (i % 3 == 1) color = "G";
-            else color= "B";
-    
+            if (i % 3 == 0)
+                color = "R";
+            else if (i % 3 == 1)
+                color = "G";
+            else
+                color = "B";
+
             referencias.add(new ReferenciaPagina(paginaVirtual, desplazamiento, fila, columna, color));
             contadorReferencia++;
         }
-    
+
         // PASO2: alternar la w del msj y la r de la img
         int bitIndex = 0;
         int desplazamientoMsj = 0;
         int byteMsg = 0;
-    
+
         while (contadorReferencia < NR) {
             // escribir en el mensaje (W)
             int paginaVirtualMsg = numPaginasImagen + (desplazamientoMsj / tamanioPagina);
-            referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj)); 
+            referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj));
             contadorReferencia++;
-    
-            // leer de la imagen (R) 
-            int posicionByte = 16 + bitIndex;  // desde eel byte 16
+
+            // leer de la imagen (R)
+            int posicionByte = 16 + bitIndex; // desde eel byte 16
             desplazamiento = posicionByte % tamanioPagina;
             int paginaVirtual = posicionByte / tamanioPagina;
             int fila = posicionByte / (ancho * 3);
             int columna = (posicionByte % (ancho * 3)) / 3;
             String color = "";
-            if (posicionByte % 3 == 0) color= "R";
-            else if (posicionByte % 3 == 1) color = "G";
-            else color= "B";
-            
+            if (posicionByte % 3 == 0)
+                color = "R";
+            else if (posicionByte % 3 == 1)
+                color = "G";
+            else
+                color = "B";
+
             referencias.add(new ReferenciaPagina(paginaVirtual, desplazamiento, fila, columna, color));
             bitIndex++;
             contadorReferencia++;
-    
+
             // verificacion de la escritura adicional después de 8 bits
             if (bitIndex % 8 == 0 && contadorReferencia < NR) {
-                referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj)); 
-                desplazamientoMsj++;  
+                referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj));
+                desplazamientoMsj++;
                 contadorReferencia++;
             }
-    
+
             // incrementar el byte del mensaje después de completar 8 bits
             if (bitIndex % 8 == 0) {
                 byteMsg++;
             }
         }
-    
+
         // verificiacion de si hicimos exactamente NR referencias
         if (contadorReferencia != NR) {
             System.out.println("Error: No se han generado exactamente NR referencias.");
         }
-    
+
         escribirArchivoReferencias(archivoResultado, referencias, tamanioPagina, alto, ancho, NR, NP);
     }
-        
+
     // escirbir las referencias generadas en un archivo
-    public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp, int nf, int nc, int nr, int np) {
+    public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp,
+            int nf, int nc, int nr, int np) {
         try (FileWriter writer = new FileWriter(archivoSalida)) {
             writer.write("TP=" + tp + "\n");
             writer.write("NF=" + nf + "\n");
@@ -183,13 +192,12 @@ public class Main {
             System.out.println("Archivo de referencias generado exitosamente en: " + archivoSalida);
         } catch (IOException e) {
             e.printStackTrace();
-        }   
-    }
-    
-    public void simularPaginacion(int numMarcos, String archivoReferencias){
-
+        }
     }
 
+    public void simularPaginacion(int numMarcos, String archivoReferencias) {
+
+    }
 
     /**
      * This method parses the file and returns an Object array:
@@ -207,12 +215,10 @@ public class Main {
         int NR = -1;
         int NP = -1;
 
-
-
         String line;
         while ((line = reader.readLine()) != null) {
             line = line.trim();
-            
+
             // Extract NR and NP from the beginning of the file
             if (line.startsWith("NR=")) {
                 NR = Integer.parseInt(line.substring(3));
@@ -225,20 +231,20 @@ public class Main {
                 // Example: Imagen[0][0].R,0,0,R
                 String[] parts = line.split(",");
                 int pageNumber = Integer.parseInt(parts[1]);
-                String IOOperationString= parts[3];
-                //obtenemos W o R
+                String IOOperationString = parts[3];
+                // obtenemos W o R
                 char IOOperationChar = IOOperationString.charAt(0);
                 ArrayList<Object> pageNumberIOOperationPair = new ArrayList<Object>();
                 pageNumberIOOperationPair.add(pageNumber);
                 pageNumberIOOperationPair.add(IOOperationChar);
                 pageNumbersAndIO.add(pageNumberIOOperationPair);
-                
+
             } else if (line.matches("Mensaje\\[\\d+\\],\\d+,\\d+,[RW]")) {
                 // Example: Mensaje[0],2045,0,W
                 String[] parts = line.split(",");
                 int pageNumber = Integer.parseInt(parts[1]);
-                String IOOperationString= parts[3];
-                //obtenemos W o R
+                String IOOperationString = parts[3];
+                // obtenemos W o R
                 char IOOperationChar = IOOperationString.charAt(0);
                 ArrayList<Object> pageNumberIOOperationPair = new ArrayList<Object>();
                 pageNumberIOOperationPair.add(pageNumber);
@@ -250,81 +256,92 @@ public class Main {
         reader.close();
 
         // Return an Object array containing the pageNumbers, NR, and NP
-        return new Object[]{pageNumbersAndIO, NR, NP};
+        return new Object[] { pageNumbersAndIO, NR, NP };
     }
 
-    //correr la simulación
+    // correr la simulación
     public static void main(String[] args) {
         InputStreamReader isr = new InputStreamReader(System.in);
         BufferedReader br = new BufferedReader(isr);
         Boolean continuar = true;
 
         try {
-            while (continuar){
-                System.out.println("======================================================================================");
-                System.out.println("=============================Seleccione una opción====================================");
+            while (continuar) {
+                System.out.println(
+                        "======================================================================================");
+                System.out.println(
+                        "=============================Seleccione una opción====================================");
                 System.out.println("1. Generacion de referencias.");
-                System.out.println("2. Calcular datos buscados: número de fallas de página, porcentaje de hits, tiempos.");
+                System.out.println(
+                        "2. Calcular datos buscados: número de fallas de página, porcentaje de hits, tiempos.");
                 System.out.println("3. Esconder mensaje en imagen.");
                 System.out.println("4. Recuperar mensaje de imagen.");
                 System.out.println("5. Salir.");
-                System.out.println("======================================================================================");
-
-
+                System.out.println(
+                        "======================================================================================");
 
                 int opcion = Integer.parseInt(br.readLine());
-    
-                if (opcion==1){
+
+                if (opcion == 1) {
                     System.out.println("Ingrese el tamaño de página (en bytes): ");
                     int tamanioPagina = Integer.parseInt(br.readLine());
-                    //TODO hacer que solo ingrese el nombre del archivo y no la ruta
-                    System.out.println("Ruta del archivo con la imagen que contiene el mensaje escondido: ");
+                    
+                    // Cambio 1: Se cambia para ingresar solo el nombre del archivo, la ruta se gestiona internamente
+                    System.out.println("Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta): ");
                     String archivoImagen = br.readLine();
-                    System.out.println("Ruta del archivo de respuesta: ");
+                    String rutaArchivoImagen = "src/imgs/" + archivoImagen;  // Asignación de ruta
+
+                    // Mejorar la ruta de salida para el archivo de referencias
+                    System.out.println("Nombre del archivo de salida para las referencias (sin .txt): ");
                     String archivoRespta = br.readLine();
-                    generarReferencias(tamanioPagina, archivoImagen, archivoRespta);
+                    String rutaArchivoRespuesta = "src/referencias/" + archivoRespta + ".txt";  // Asignación de ruta
+
+                    generarReferencias(tamanioPagina, rutaArchivoImagen, rutaArchivoRespuesta);
+
+                    System.out.println("El documento fue creado correctamente en la carpeta referencias.");
 
                     System.out.println("El documento fue creado correctamente.");
 
-                }
-                else if(opcion ==2){
+                } else if (opcion == 2) {
                     System.out.println("Ingrese el número de marcos de página: ");
                     int numeroMarcosPagina = Integer.parseInt(br.readLine());
-                    
-                    //TODO mejorar rutas, como carpeta que se llame files
+
+                    // Cambio 2: Mejoramos la forma en la que se manejan las rutas
                     System.out.println("Ingrese el nombre del archivo de referencias (sin el .txt): ");
                     String nombreDelArchivoDeReferencias = br.readLine();
- 
-                    String rutaAlArchivo = "src/referencias/"+nombreDelArchivoDeReferencias+".txt";
-                    
-                    //Arreglo con la lista de referencias, Numero de referencias, Numero de Paginas
-                    Object[] arregloConDatos = generarListaDeReferenciasYTamanios(rutaAlArchivo);
-                    
-                    // Extract the results from the array
-                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0];  // First element: list of page numbers and io operations
-                    int numeroDeReferencias = (int) arregloConDatos[1];  // Second element: NR value
-                    int numeroDePaginas = (int) arregloConDatos[2];  // Third element: NP value
 
-                    //Iniciar RAM Y SWAP
+                    String rutaAlArchivo = "src/referencias/" + nombreDelArchivoDeReferencias + ".txt";  // Ruta del archivo de referencias
+
+                    // Arreglo con la lista de referencias, Numero de referencias, Numero de Paginas
+                    Object[] arregloConDatos = generarListaDeReferenciasYTamanios(rutaAlArchivo);
+
+                    // Extraer los datos del arreglo
+                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First element: list of page numbers and io operations
+                    int numeroDeReferencias = (int) arregloConDatos[1]; // Second element: NR value
+                    int numeroDePaginas = (int) arregloConDatos[2]; // Third element: NP value
+
+                    // Iniciar RAM Y SWAP
                     RAM ram = new RAM(numeroMarcosPagina);
                     SWAP swap = new SWAP(numeroDePaginas);
-                    //cargamos la SWAP con todos las paginas
+                    // cargamos la SWAP con todos las paginas
                     swap.cargarSWAP();
 
-                    //Iniciamos tablas 
+                    // Iniciamos tablas
                     TablaDePaginas tablaDePaginas = new TablaDePaginas(numeroDePaginas);
                     TablaAuxiliar tablaAuxiliar = new TablaAuxiliar(numeroDePaginas);
 
-                    //flag para indicar al thread 2, cuándo debe parar. Cuando el thread 1 termine de leer las referencias, marca este flag como false
+                    // flag para indicar al thread 2, cuándo debe parar. Cuando el thread 1 termine
+                    // de leer las referencias, marca este flag como false
                     FlagHayMasRefencias flagHayMasReferencias = new FlagHayMasRefencias(true);
-                    
-                    //Utilizo barrera para que se muestre el menú cuando ya todos los threads terminen
-                    CyclicBarrier barrera = new CyclicBarrier ( 3 );
 
-                    
-                    //Thread que se encarga de resolver las referencias
-                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar, swap, ram, pageNumbersAndIO, numeroDeReferencias, barrera);
-                    //Thread que actualiza el bit R de cada entrada
+                    // Utilizo barrera para que se muestre el menú cuando ya todos los threads
+                    // terminen
+                    CyclicBarrier barrera = new CyclicBarrier(3);
+
+                    // Thread que se encarga de resolver las referencias
+                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar, swap, ram,
+                            pageNumbersAndIO, numeroDeReferencias, barrera);
+                    // Thread que actualiza el bit R de cada entrada
                     Thread2 thread2 = new Thread2(flagHayMasReferencias, tablaDePaginas, barrera);
 
                     thread1.start();
@@ -332,21 +349,18 @@ public class Main {
 
                     barrera.await();
 
-                }
-                else if (opcion == 3) {
+                } else if (opcion == 3) {
                     esconderMensajeEnImagen();
-                }
-                else if (opcion == 4) {
+                } else if (opcion == 4) {
                     recuperarMensajeDeImagen();
+                } else if (opcion == 5) {
+                    continuar = false;
                 }
-                else if (opcion ==5 ){
-                    continuar= false;
-                }
-                
+
                 else {
                     System.out.println("Opción no válida.");
                 }
-    
+
             }
 
         } catch (Exception e) {
