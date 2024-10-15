@@ -86,4 +86,46 @@ public class TablaDePaginas {
     }
 
 
+    /**
+     * This method returns the index of the page to remove based on the NRU algorithm.
+     * It finds the page in the lowest nonempty class (class 0: [R=0, M=0], class 1: [R=0, M=1],
+     * class 2: [R=1, M=0], class 3: [R=1, M=1]) and returns the lowest index page from that class.
+     * 
+     * @return index of the page to remove.
+     */
+    public synchronized int pageIndexToRemove() {
+        int pageToRemove = -1;
+        
+        // Check class 0 (R=0, M=0)
+        for (int i = 0; i < tamanio; i++) {
+            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 0 && tablaDePaginas[i][3] == 0) {
+                return i;  // Return first match from class 0
+            }
+        }
+
+        // Check class 1 (R=0, M=1)
+        for (int i = 0; i < tamanio; i++) {
+            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 0 && tablaDePaginas[i][3] == 1) {
+                return i;  // Return first match from class 1
+            }
+        }
+
+        // Check class 2 (R=1, M=0)
+        for (int i = 0; i < tamanio; i++) {
+            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 1 && tablaDePaginas[i][3] == 0) {
+                return i;  // Return first match from class 2
+            }
+        }
+
+        // Check class 3 (R=1, M=1)
+        for (int i = 0; i < tamanio; i++) {
+            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 1 && tablaDePaginas[i][3] == 1) {
+                return i;  // Return first match from class 3
+            }
+        }
+
+        return pageToRemove;  // Return -1 if no page to remove is found (this shouldn't happen if the table is full)
+    }
+
+
 }
