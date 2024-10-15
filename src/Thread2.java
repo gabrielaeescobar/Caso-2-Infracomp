@@ -1,21 +1,27 @@
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+
 public class Thread2 extends Thread {
     /**
      * flag que nos dice si quedan más referencias en la lista de referencias
      */
-    FlagHayMasRefencias flagHayMasReferencias;
+    final FlagHayMasRefencias flagHayMasReferencias;
     /**
      * La tabla de páginas del proceso
      */
     TablaDePaginas tablaDePaginas;
 
+    final CyclicBarrier barrera;
+    
     /**
      * Constructor 
      * @param flagHayMasReferencias: flag que me dice si hay más referencias, este thread se va a ajecutar hasta que este flag sea falso
      * @param tablaDePaginas: la tabla de páginas del proceso
      */
-    public Thread2(FlagHayMasRefencias flagHayMasReferencias, TablaDePaginas tablaDePaginas){
+    public Thread2(FlagHayMasRefencias flagHayMasReferencias, TablaDePaginas tablaDePaginas, CyclicBarrier barrera){
         this.flagHayMasReferencias = flagHayMasReferencias;
         this.tablaDePaginas = tablaDePaginas;
+        this.barrera = barrera;
     }
 
 
@@ -38,7 +44,16 @@ public class Thread2 extends Thread {
             }
         }
 
+        try {
+            barrera.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
+
+    
 
 
 

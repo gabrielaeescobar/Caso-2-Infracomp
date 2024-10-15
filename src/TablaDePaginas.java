@@ -36,7 +36,6 @@ public class TablaDePaginas {
             return -1;
         
         } else {
-
             //Si la operación fue de lectura, solo actualiza el bit R.
             if(OperacionIO =='R'){
                 tablaDePaginas[indicePagina][2] = 1;

@@ -1,6 +1,8 @@
 //importamos librerías
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CyclicBarrier;
 
 public class Main {
     private int hits;
@@ -188,6 +190,69 @@ public class Main {
 
     }
 
+
+    /**
+     * This method parses the file and returns an Object array:
+     * - First element: List of pairs of pagenumber and IO operation ex: [0, 'W']
+     * - Second element: NR value
+     * - Third element: NP value
+     * 
+     * @param filePath The location of the .txt file
+     * @return Object array containing pageNumbers, NR, and NP
+     * @throws IOException if there's an issue reading the file
+     */
+    public static Object[] generarListaDeReferenciasYTamanios(String filePath) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+        ArrayList<ArrayList<Object>> pageNumbersAndIO = new ArrayList<ArrayList<Object>>();
+        int NR = -1;
+        int NP = -1;
+
+
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            line = line.trim();
+            
+            // Extract NR and NP from the beginning of the file
+            if (line.startsWith("NR=")) {
+                NR = Integer.parseInt(line.substring(3));
+            } else if (line.startsWith("NP=")) {
+                NP = Integer.parseInt(line.substring(3));
+            }
+
+            // Process lines that match the 1st or 2nd possible formats
+            if (line.matches("Imagen\\[\\d+\\]\\[\\d+\\]\\.[RGB],\\d+,\\d+,[RW]")) {
+                // Example: Imagen[0][0].R,0,0,R
+                String[] parts = line.split(",");
+                int pageNumber = Integer.parseInt(parts[1]);
+                String IOOperationString= parts[3];
+                //obtenemos W o R
+                char IOOperationChar = IOOperationString.charAt(0);
+                ArrayList<Object> pageNumberIOOperationPair = new ArrayList<Object>();
+                pageNumberIOOperationPair.add(pageNumber);
+                pageNumberIOOperationPair.add(IOOperationChar);
+                pageNumbersAndIO.add(pageNumberIOOperationPair);
+                
+            } else if (line.matches("Mensaje\\[\\d+\\],\\d+,\\d+,[RW]")) {
+                // Example: Mensaje[0],2045,0,W
+                String[] parts = line.split(",");
+                int pageNumber = Integer.parseInt(parts[1]);
+                String IOOperationString= parts[3];
+                //obtenemos W o R
+                char IOOperationChar = IOOperationString.charAt(0);
+                ArrayList<Object> pageNumberIOOperationPair = new ArrayList<Object>();
+                pageNumberIOOperationPair.add(pageNumber);
+                pageNumberIOOperationPair.add(IOOperationChar);
+                pageNumbersAndIO.add(pageNumberIOOperationPair);
+            }
+        }
+
+        reader.close();
+
+        // Return an Object array containing the pageNumbers, NR, and NP
+        return new Object[]{pageNumbersAndIO, NR, NP};
+    }
+
     //correr la simulación
     public static void main(String[] args) {
         InputStreamReader isr = new InputStreamReader(System.in);
@@ -223,17 +288,50 @@ public class Main {
 
                 }
                 else if(opcion ==2){
-                    System.out.println("Seguimos trabajando en esto....");
                     System.out.println("Ingrese el número de marcos de página: ");
                     int numeroMarcosPagina = Integer.parseInt(br.readLine());
                     
                     //TODO mejorar rutas, como carpeta que se llame files
-                    System.out.println("Ingrese el nombre de marcos de página: ");
+                    System.out.println("Ingrese el nombre del archivo de referencias (sin el .txt): ");
                     String nombreDelArchivoDeReferencias = br.readLine();
+ 
+                    String rutaAlArchivo = "src/referencias/"+nombreDelArchivoDeReferencias+".txt";
+                    
+                    //Arreglo con la lista de referencias, Numero de referencias, Numero de Paginas
+                    Object[] arregloConDatos = generarListaDeReferenciasYTamanios(rutaAlArchivo);
+                    
+                    // Extract the results from the array
+                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0];  // First element: list of page numbers and io operations
+                    int numeroDeReferencias = (int) arregloConDatos[1];  // Second element: NR value
+                    int numeroDePaginas = (int) arregloConDatos[2];  // Third element: NP value
 
-                    //TODO iniciar RAM Y SWAP
+                    //Iniciar RAM Y SWAP
+                    RAM ram = new RAM(numeroMarcosPagina);
+                    SWAP swap = new SWAP(numeroDePaginas);
+                    //cargamos la SWAP con todos las paginas
+                    swap.cargarSWAP();
+
+                    //Iniciamos tablas 
+                    TablaDePaginas tablaDePaginas = new TablaDePaginas(numeroDePaginas);
+                    TablaAuxiliar tablaAuxiliar = new TablaAuxiliar(numeroDePaginas);
+
+                    //flag para indicar al thread 2, cuándo debe parar. Cuando el thread 1 termine de leer las referencias, marca este flag como false
+                    FlagHayMasRefencias flagHayMasReferencias = new FlagHayMasRefencias(true);
+                    
+                    //Utilizo barrera para que se muestre el menú cuando ya todos los threads terminen
+                    CyclicBarrier barrera = new CyclicBarrier ( 3 );
 
                     
+                    //Thread que se encarga de resolver las referencias
+                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar, swap, ram, pageNumbersAndIO, numeroDeReferencias, barrera);
+                    //Thread que actualiza el bit R de cada entrada
+                    Thread2 thread2 = new Thread2(flagHayMasReferencias, tablaDePaginas, barrera);
+
+                    thread1.start();
+                    thread2.start();
+
+                    barrera.await();
+
                 }
                 else if (opcion == 3) {
                     esconderMensajeEnImagen();
