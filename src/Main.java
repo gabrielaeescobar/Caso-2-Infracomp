@@ -287,9 +287,9 @@ public class Main {
                     int tamanioPagina = Integer.parseInt(br.readLine());
                     
                     // Cambio 1: Se cambia para ingresar solo el nombre del archivo, la ruta se gestiona internamente
-                    System.out.println("Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta): ");
+                    System.out.println("Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta ni extension): ");
                     String archivoImagen = br.readLine();
-                    String rutaArchivoImagen = "src/imgs/" + archivoImagen;  // Asignación de ruta
+                    String rutaArchivoImagen = "src/imgs/" + archivoImagen +".bmp";  // Asignación de ruta
 
                     // Mejorar la ruta de salida para el archivo de referencias
                     System.out.println("Nombre del archivo de salida para las referencias (sin .txt): ");
