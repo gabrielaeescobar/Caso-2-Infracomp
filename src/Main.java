@@ -84,6 +84,7 @@ public class Main {
 
     // generar las referencias
     public static void generarReferencias(int tamanioPagina, String archivoImagen, String archivoResultado) {
+        referencias = new ArrayList<>(); //limpia la lista de referencias, por si antes se corrio una imagen, para que no se acomulen
         Imagen imagen = new Imagen(archivoImagen);
 
         // datos de la img
@@ -178,8 +179,7 @@ public class Main {
     }
 
     // escirbir las referencias generadas en un archivo
-    public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp,
-            int nf, int nc, int nr, int np) {
+    public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp, int nf, int nc, int nr, int np) {
         try (FileWriter writer = new FileWriter(archivoSalida)) {
             writer.write("TP=" + tp + "\n");
             writer.write("NF=" + nf + "\n");
@@ -287,12 +287,12 @@ public class Main {
                     int tamanioPagina = Integer.parseInt(br.readLine());
                     
                     // Cambio 1: Se cambia para ingresar solo el nombre del archivo, la ruta se gestiona internamente
-                    System.out.println("Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta ni extension): ");
+                    System.out.println("Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta ni extension, por ejemplo: caso2-parrots_mod): ");
                     String archivoImagen = br.readLine();
                     String rutaArchivoImagen = "src/imgs/" + archivoImagen +".bmp";  // Asignación de ruta
 
                     // Mejorar la ruta de salida para el archivo de referencias
-                    System.out.println("Nombre del archivo de salida para las referencias (sin .txt): ");
+                    System.out.println("Nombre del archivo de salida para las referencias (sin .txt, por ejemplo: ref_parrots): ");
                     String archivoRespta = br.readLine();
                     String rutaArchivoRespuesta = "src/referencias/" + archivoRespta + ".txt";  // Asignación de ruta
 
