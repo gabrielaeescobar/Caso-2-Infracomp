@@ -35,17 +35,23 @@ public class Main {
         try {
             System.out.println("Nombre del archivo con la imagen a procesar: ");
             String rutaImagen = br.readLine();
+            rutaImagen = "src/imgs/" + rutaImagen + ".bmp";
 
             Imagen imagen = new Imagen(rutaImagen);
 
             System.out.println("Nombre del archivo con el mensaje a esconder: ");
             String rutaMensaje = br.readLine();
+            rutaMensaje = "src/msjs/" + rutaMensaje + ".txt";
+
+            System.out.println("Nombre de la imagen a crear con el mensaje escondido: ");
+            String rutaSalida = br.readLine();
+            rutaSalida = "src/imgs/" + rutaSalida + ".bmp";
 
             char[] mensaje = new char[8000]; // Suponiendo un máximo de 8000 caracteres
             int longitud = leerArchivoTexto(rutaMensaje, mensaje);
 
             imagen.esconder(mensaje, longitud);
-            imagen.escribirImagen("src/imgs/salida.bmp");
+            imagen.escribirImagen(rutaSalida);
             System.out.println("El mensaje ha sido escondido en la imagen '" + rutaImagen + "_salida'.");
 
         } catch (Exception e) {
@@ -58,8 +64,9 @@ public class Main {
         InputStreamReader isr = new InputStreamReader(System.in);
         BufferedReader br = new BufferedReader(isr);
         try {
-            System.out.println("Nombre del archivo con el mensaje escondido: ");
+            System.out.println("Nombre del archivo con el mensaje escondido sin extension: ");
             String ruta = br.readLine();
+            ruta = "src/imgs/" + ruta + ".bmp";
 
             Imagen imagen = new Imagen(ruta);
             int longitud = imagen.leerLongitud();
@@ -69,6 +76,7 @@ public class Main {
 
             System.out.println("Nombre del archivo para almacenar el mensaje recuperado: ");
             String salida = br.readLine();
+            salida = "src/referencias/" + salida + ".txt";
 
             // Guardar el mensaje recuperado en un archivo de texto
             try (FileOutputStream fos = new FileOutputStream(salida)) {
@@ -372,14 +380,16 @@ public class Main {
                     recuperarMensajeDeImagen();
                 } else if (opcion == 5) {
                     // Configuración de los tamaños de imagen, mensajes y marcos de página
+                    int[] tamaniosPagina = { 256, 512, 1024, 2048, 4096 }; // Ejemplo de tamaños de página en bytes
                     int[] tamaniosMensaje = { 100, 1000, 2000, 4000, 8000 };
-                    int[] tamaniosImagen = { 500, 1000 }; // Ejemplo de tamaños de imagen en píxeles
+                    int[] tamaniosImagen = { 256, 426 }; // Ejemplo de tamaños de imagen en píxeles
                     int[] marcosDePagina = { 4, 8 };
 
                     // Almacenar los resultados en una lista o matriz
                     List<String> resultados = new ArrayList<>();
 
                     // Iterar sobre los escenarios
+                    for (int tamanioPagina : tamaniosPagina) {
                     for (int tamanioImagen : tamaniosImagen) {
                         for (int tamanioMensaje : tamaniosMensaje) {
                             for (int marcos : marcosDePagina) {
@@ -387,14 +397,13 @@ public class Main {
                                 System.out.println("Ejecutando escenario: Imagen=" + tamanioImagen + "px, Mensaje="
                                         + tamanioMensaje + " chars, Marcos=" + marcos);
 
-                                // Generar archivo de imagen y mensaje según el tamaño del mensaje
+                                // Busca la imagen ya modificada
                                 String rutaImagen = "src/imgs/imagen_" + tamanioImagen + ".bmp";
-                                String archivoMensaje = "src/mensajes/mensaje_" + tamanioMensaje + ".txt";
 
                                 // Generar referencias para este escenario
                                 String archivoReferencias = "src/referencias/referencia_" + tamanioImagen + "_"
                                         + tamanioMensaje + "_" + marcos + ".txt";
-                                generarReferencias(256, rutaImagen, archivoReferencias); // Asumiendo tamaño de página
+                                generarReferencias(tamanioPagina, rutaImagen, archivoReferencias); // Asumiendo tamaño de página
                                                                                          // de 256 bytes
 
                                 // Leer referencias generadas
@@ -441,7 +450,7 @@ public class Main {
                                 }
                             }
                         }
-                    }
+                    }}
 
                     // Exportar resultados a un archivo CSV
                     exportarResultadosAArchivo(resultados, "src/resultados/resultados_pruebas.csv");
