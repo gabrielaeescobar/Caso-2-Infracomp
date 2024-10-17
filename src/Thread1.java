@@ -28,13 +28,11 @@ public class Thread1 extends Thread {
         this.swap = swap;
         this.ram = ram;
         this.pageNumbersAndIO = pageNumbersAndIO;
-        //TODO revisar si lo necesito
         this.numeroDeReferencias = numeroDeReferencias;
         this.barrera = barrera;
     }
     
     @Override
-    //TODO falta copiar una página a SWAP en caso de que el bit M diga que esté modificado, y la vaya a eliminar según NRU
     public void run(){
         for(ArrayList<Object> pageNumberAndIO: pageNumbersAndIO){
             
@@ -76,7 +74,6 @@ public class Thread1 extends Thread {
                     indiceMarcoPaginaLibre = tablaDePaginas.pageIndexToRemove();
                     // System.out.print("Indice a remover segun NRU: ");
                     // System.out.println(indiceMarcoPaginaLibre);
-                    //TODO Pegar a SWAP si se modificó la pagina que voy a eliminar:
                     if (IOOperation == 'W') {
                         // Guardar la página en SWAP antes de eliminarla si fue modificada
                         swap.savePagina(indiceMarcoPaginaLibre, ram.getMarcoDePagina(indiceMarcoPaginaLibre));

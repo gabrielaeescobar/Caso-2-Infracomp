@@ -29,23 +29,9 @@ public class Main {
     }
 
     // esconder un mensaje en una imagen
-    public static void esconderMensajeEnImagen() {
-        InputStreamReader isr = new InputStreamReader(System.in);
-        BufferedReader br = new BufferedReader(isr);
+    public static void esconderMensajeEnImagen(String rutaImagen, String rutaMensaje, String rutaSalida) {
         try {
-            System.out.println("Nombre del archivo con la imagen a procesar: ");
-            String rutaImagen = br.readLine();
-            rutaImagen = "src/imgs/" + rutaImagen + ".bmp";
-
             Imagen imagen = new Imagen(rutaImagen);
-
-            System.out.println("Nombre del archivo con el mensaje a esconder: ");
-            String rutaMensaje = br.readLine();
-            rutaMensaje = "src/msjs/" + rutaMensaje + ".txt";
-
-            System.out.println("Nombre de la imagen a crear con el mensaje escondido: ");
-            String rutaSalida = br.readLine();
-            rutaSalida = "src/imgs/" + rutaSalida + ".bmp";
 
             char[] mensaje = new char[8000]; // Suponiendo un máximo de 8000 caracteres
             int longitud = leerArchivoTexto(rutaMensaje, mensaje);
@@ -104,7 +90,7 @@ public class Main {
         int longitudMensaje = imagen.leerLongitud();
         int NR = (longitudMensaje * 17) + 16; // 16B de longitud de msj + (longitud del mensaje * 8B lectura*
                                               // 8Bescritura +1 del cambio)
-        int numPaginasImagen = (int) Math.ceil((double) totalBytesImagen / tamanioPagina);
+        int numPaginasImagen = (int) Math.ceil(totalBytesImagen / tamanioPagina);
         int numPaginasMensaje = (int) Math.ceil((double) longitudMensaje / tamanioPagina);
         int NP = (int) Math.ceil((double) ((ancho * alto * 3) + longitudMensaje) / tamanioPagina);
         // System.out.println("logitud msj: " + longitudMensaje);
@@ -375,85 +361,115 @@ public class Main {
                     barrera.await();
 
                 } else if (opcion == 3) {
-                    esconderMensajeEnImagen();
+                    System.out.println("Nombre del archivo con la imagen a procesar: ");
+                    String rutaImagen = br.readLine();
+                    rutaImagen = "src/imgs/" + rutaImagen + ".bmp";
+
+                    System.out.println("Nombre del archivo con el mensaje a esconder: ");
+                    String rutaMensaje = br.readLine();
+                    rutaMensaje = "src/msjs/" + rutaMensaje + ".txt";
+
+                    System.out.println("Nombre de la imagen a crear con el mensaje escondido: ");
+                    String rutaSalida = br.readLine();
+                    rutaSalida = "src/imgs/" + rutaSalida + ".bmp";
+                    esconderMensajeEnImagen(rutaImagen, rutaMensaje, rutaSalida);
                 } else if (opcion == 4) {
                     recuperarMensajeDeImagen();
                 } else if (opcion == 5) {
                     // Configuración de los tamaños de imagen, mensajes y marcos de página
-                    int[] tamaniosPagina = { 256, 512, 1024, 2048, 4096 }; // Ejemplo de tamaños de página en bytes
+                    int[] tamaniosPagina = { 256, 512, 1024}; // Ejemplo de tamaños de página en bytes
                     int[] tamaniosMensaje = { 100, 1000, 2000, 4000, 8000 };
                     int[] tamaniosImagen = { 256, 426 }; // Ejemplo de tamaños de imagen en píxeles
                     int[] marcosDePagina = { 4, 8 };
 
+                    // Ruta del archivo de resultados
+                    String rutaArchivoResultados = "resultados_pruebas.csv";
+
                     // Almacenar los resultados en una lista o matriz
                     List<String> resultados = new ArrayList<>();
 
+                    try (FileWriter writer = new FileWriter(rutaArchivoResultados)) {
+                        // Escribir la cabecera del archivo CSV
+                        writer.write("Escenario,Pagesize (byte),Imagen (px),Mensaje (chars),Marcos,Hits,Misses,Tiempo (ns)\n");
+                
+
                     // Iterar sobre los escenarios
                     for (int tamanioPagina : tamaniosPagina) {
-                    for (int tamanioImagen : tamaniosImagen) {
-                        for (int tamanioMensaje : tamaniosMensaje) {
-                            for (int marcos : marcosDePagina) {
+                        for (int tamanioImagen : tamaniosImagen) {
+                            for (int tamanioMensaje : tamaniosMensaje) {
+                                for (int marcos : marcosDePagina) {
 
-                                System.out.println("Ejecutando escenario: Imagen=" + tamanioImagen + "px, Mensaje="
-                                        + tamanioMensaje + " chars, Marcos=" + marcos);
+                                    System.out.println("Ejecutando escenario:pagesize= "+ tamanioPagina +"Imagen=" + tamanioImagen + "px, Mensaje="
+                                            + tamanioMensaje + " chars, Marcos=" + marcos);
 
-                                // Busca la imagen ya modificada
-                                String rutaImagen = "src/imgs/imagen_" + tamanioImagen + ".bmp";
+                                    // Busca la imagen sin modificar
+                                    String rutaImagen = "src/imgs/imagen_" + tamanioImagen + ".bmp";
+                                    String rutaImagen_mod = "src/imgs/imagen_" + tamanioImagen + "_mod.bmp";
+                                    // busca el mensaje correspondiente al tamaño
+                                    String rutaMensaje = "src/msjs/mensaje_" + tamanioMensaje + ".txt";
 
-                                // Generar referencias para este escenario
-                                String archivoReferencias = "src/referencias/referencia_" + tamanioImagen + "_"
-                                        + tamanioMensaje + "_" + marcos + ".txt";
-                                generarReferencias(tamanioPagina, rutaImagen, archivoReferencias); // Asumiendo tamaño de página
-                                                                                         // de 256 bytes
+                                    // Esconder mensaje en la imagen
+                                    esconderMensajeEnImagen(rutaImagen, rutaMensaje, rutaImagen_mod);
 
-                                // Leer referencias generadas
-                                Object[] arregloConDatos = generarListaDeReferenciasYTamanios(archivoReferencias);
-                                ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0];
-                                int numeroDeReferencias = (int) arregloConDatos[1];
-                                int numeroDePaginas = (int) arregloConDatos[2];
+                                    // Generar referencias para este escenario
+                                    String archivoReferencias = "src/referencias/referencia_" + tamanioImagen + "_"
+                                            + tamanioMensaje + "_" + marcos + ".txt";
+                                    generarReferencias(tamanioPagina, rutaImagen_mod, archivoReferencias); // Asumiendo
+                                                                                                       // tamaño de
+                                                                                                       // página
+                                    // de 256 bytes
 
-                                // Iniciar RAM y SWAP
-                                RAM ram = new RAM(marcos);
-                                SWAP swap = new SWAP(numeroDePaginas);
-                                swap.cargarSWAP();
+                                    // Leer referencias generadas
+                                    Object[] arregloConDatos = generarListaDeReferenciasYTamanios(archivoReferencias);
+                                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0];
+                                    int numeroDeReferencias = (int) arregloConDatos[1];
+                                    int numeroDePaginas = (int) arregloConDatos[2];
 
-                                // Iniciar tablas de paginación
-                                TablaDePaginas tablaDePaginas = new TablaDePaginas(numeroDePaginas);
-                                TablaAuxiliar tablaAuxiliar = new TablaAuxiliar(numeroDePaginas);
+                                    // Iniciar RAM y SWAP
+                                    RAM ram = new RAM(marcos);
+                                    SWAP swap = new SWAP(numeroDePaginas);
+                                    swap.cargarSWAP();
 
-                                // Flag para detener el Thread 2
-                                FlagHayMasRefencias flagHayMasReferencias = new FlagHayMasRefencias(true);
+                                    // Iniciar tablas de paginación
+                                    TablaDePaginas tablaDePaginas = new TablaDePaginas(numeroDePaginas);
+                                    TablaAuxiliar tablaAuxiliar = new TablaAuxiliar(numeroDePaginas);
 
-                                // Barrera para sincronización
-                                CyclicBarrier barrera = new CyclicBarrier(3);
+                                    // Flag para detener el Thread 2
+                                    FlagHayMasRefencias flagHayMasReferencias = new FlagHayMasRefencias(true);
 
-                                // Iniciar los threads
-                                Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar,
-                                        swap, ram, pageNumbersAndIO, numeroDeReferencias, barrera);
-                                Thread2 thread2 = new Thread2(flagHayMasReferencias, tablaDePaginas, barrera);
+                                    // Barrera para sincronización
+                                    CyclicBarrier barrera = new CyclicBarrier(3);
 
-                                thread1.start();
-                                thread2.start();
+                                    // Iniciar los threads
+                                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar,
+                                            swap, ram, pageNumbersAndIO, numeroDeReferencias, barrera);
+                                    Thread2 thread2 = new Thread2(flagHayMasReferencias, tablaDePaginas, barrera);
 
-                                try {
-                                    barrera.await(); // Esperamos que los hilos terminen
+                                    thread1.start();
+                                    thread2.start();
 
-                                    // Guardar resultados
-                                    String resultado = "Imagen=" + tamanioImagen + "px, Mensaje=" + tamanioMensaje
-                                            + " chars, Marcos=" + marcos
-                                            + ", Hits=" + thread1.getHits() + ", Misses=" + thread1.getMisses()
-                                            + ", Tiempo(ns)=" + thread1.getTiempoTotal();
-                                    resultados.add(resultado);
+                                    try {
+                                        barrera.await(); // Esperamos que los hilos terminen
 
-                                } catch (InterruptedException | BrokenBarrierException e) {
-                                    e.printStackTrace();
+                                        // Guardar resultados
+                                        String resultado ="PageSize="+tamanioPagina + "bytes, Imagen=" + tamanioImagen + "px, Mensaje=" + tamanioMensaje
+                                                + " chars, Marcos=" + marcos
+                                                + ", Hits=" + thread1.getHits() + ", Misses=" + thread1.getMisses()
+                                                + ", Tiempo(ns)=" + thread1.getTiempoTotal()+"\n";
+                                        resultados.add(resultado);
+                                        writer.write(resultado);
+                                        writer.flush(); // Asegurar que se escriban los datos en el archivo
+
+                                    } catch (InterruptedException | BrokenBarrierException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
                         }
-                    }}
+                    }
 
                     // Exportar resultados a un archivo CSV
-                    exportarResultadosAArchivo(resultados, "src/resultados/resultados_pruebas.csv");
+                    exportarResultadosAArchivo(resultados, "src/resultados/resultados_pruebas.csv");}
                 } else if (opcion == 0) {
                     continuar = false;
                 }
