@@ -18,6 +18,7 @@ public class Thread1 extends Thread {
     final int numeroDeReferencias;
     private int hits = 0;
     private int misses = 0;
+    private long tiempoTotal = 0;  // Tiempo en nanosegundos
 
 
     public Thread1(FlagHayMasRefencias flagHayMasReferencias, TablaDePaginas tablaDePaginas, TablaAuxiliar tablaAuxiliar, SWAP swap, RAM ram, ArrayList<ArrayList<Object>> pageNumbersAndIO, int numeroDeReferencias, CyclicBarrier barrera){
@@ -47,11 +48,13 @@ public class Thread1 extends Thread {
                 hits++;
                 // System.out.print("Contenido página: ");
                 // System.out.println(ram.getMarcoDePagina(indiceMarcoDePagina));
+                tiempoTotal += 25;  // Tiempo de acceso en caso de hit (25 ns)
 
             //Si es -1 ocurrió falló de página
             } else {
                 
                 misses++;
+                tiempoTotal += 10_000_000;  // Tiempo de acceso en caso de miss (10 ms)
                 // voy a swap y traigo la pagina
                 int indiceSWAP = tablaAuxiliar.buscarPagina(pageNumber);
                 int paginaSWAP = swap.getPagina(indiceSWAP);
@@ -74,6 +77,11 @@ public class Thread1 extends Thread {
                     // System.out.print("Indice a remover segun NRU: ");
                     // System.out.println(indiceMarcoPaginaLibre);
                     //TODO Pegar a SWAP si se modificó la pagina que voy a eliminar:
+                    //if (IOOperation == 'W') {
+                        // Guardar la página en SWAP antes de eliminarla si fue modificada
+                      //  swap.savePagina(indiceMarcoPaginaLibre, ram.getMarcoDePagina(indiceMarcoPaginaLibre));
+                    //}
+
                     ram.getAndRemoverMarcoDePagina(indiceMarcoPaginaLibre);
                     ram.addMarcoDePagina(indiceMarcoPaginaLibre, paginaSWAP);
 
@@ -92,12 +100,16 @@ public class Thread1 extends Thread {
             }
         }
 
-        //cuando termine actualizamos flag
+        // Cuando termine, actualizamos flag
         flagHayMasReferencias.setflagHayMasReferencias(false);
-        System.out.print("Hits :");
+        System.out.print("Hits : ");
         System.out.println(hits);
-        System.out.print("Misses :");
+        System.out.print("Misses : ");
         System.out.println(misses);
+        System.out.print("Tiempo Total (ns) : ");
+        System.out.println(tiempoTotal);
+        System.out.print("Tiempo Total (segundos) : ");
+        System.out.println(tiempoTotal/1000000000);
         
         try {
             barrera.await();
