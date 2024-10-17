@@ -3,6 +3,7 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 public class Main {
@@ -84,7 +85,8 @@ public class Main {
 
     // generar las referencias
     public static void generarReferencias(int tamanioPagina, String archivoImagen, String archivoResultado) {
-        referencias = new ArrayList<>(); //limpia la lista de referencias, por si antes se corrio una imagen, para que no se acomulen
+        referencias = new ArrayList<>(); // limpia la lista de referencias, por si antes se corrio una imagen, para que
+                                         // no se acomulen
         Imagen imagen = new Imagen(archivoImagen);
 
         // datos de la img
@@ -179,7 +181,8 @@ public class Main {
     }
 
     // escirbir las referencias generadas en un archivo
-    public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp, int nf, int nc, int nr, int np) {
+    public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp,
+            int nf, int nc, int nr, int np) {
         try (FileWriter writer = new FileWriter(archivoSalida)) {
             writer.write("TP=" + tp + "\n");
             writer.write("NF=" + nf + "\n");
@@ -276,7 +279,8 @@ public class Main {
                         "2. Calcular datos buscados: número de fallas de página, porcentaje de hits, tiempos.");
                 System.out.println("3. Esconder mensaje en imagen.");
                 System.out.println("4. Recuperar mensaje de imagen.");
-                System.out.println("5. Salir.");
+                System.out.println("5. Ejecutar pruebas automáticas.");
+                System.out.println("0. Salir.");
                 System.out.println(
                         "======================================================================================");
 
@@ -285,16 +289,19 @@ public class Main {
                 if (opcion == 1) {
                     System.out.println("Ingrese el tamaño de página (en bytes): ");
                     int tamanioPagina = Integer.parseInt(br.readLine());
-                    
-                    // Cambio 1: Se cambia para ingresar solo el nombre del archivo, la ruta se gestiona internamente
-                    System.out.println("Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta ni extension, por ejemplo: caso2-parrots_mod): ");
+
+                    // Cambio 1: Se cambia para ingresar solo el nombre del archivo, la ruta se
+                    // gestiona internamente
+                    System.out.println(
+                            "Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta ni extension, por ejemplo: caso2-parrots_mod): ");
                     String archivoImagen = br.readLine();
-                    String rutaArchivoImagen = "src/imgs/" + archivoImagen +".bmp";  // Asignación de ruta
+                    String rutaArchivoImagen = "src/imgs/" + archivoImagen + ".bmp"; // Asignación de ruta
 
                     // Mejorar la ruta de salida para el archivo de referencias
-                    System.out.println("Nombre del archivo de salida para las referencias (sin .txt, por ejemplo: ref_parrots): ");
+                    System.out.println(
+                            "Nombre del archivo de salida para las referencias (sin .txt, por ejemplo: ref_parrots): ");
                     String archivoRespta = br.readLine();
-                    String rutaArchivoRespuesta = "src/referencias/" + archivoRespta + ".txt";  // Asignación de ruta
+                    String rutaArchivoRespuesta = "src/referencias/" + archivoRespta + ".txt"; // Asignación de ruta
 
                     generarReferencias(tamanioPagina, rutaArchivoImagen, rutaArchivoRespuesta);
 
@@ -310,13 +317,23 @@ public class Main {
                     System.out.println("Ingrese el nombre del archivo de referencias (sin el .txt): ");
                     String nombreDelArchivoDeReferencias = br.readLine();
 
-                    String rutaAlArchivo = "src/referencias/" + nombreDelArchivoDeReferencias + ".txt";  // Ruta del archivo de referencias
+                    String rutaAlArchivo = "src/referencias/" + nombreDelArchivoDeReferencias + ".txt"; // Ruta del
+                                                                                                        // archivo de
+                                                                                                        // referencias
 
                     // Arreglo con la lista de referencias, Numero de referencias, Numero de Paginas
                     Object[] arregloConDatos = generarListaDeReferenciasYTamanios(rutaAlArchivo);
 
                     // Extraer los datos del arreglo
-                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First element: list of page numbers and io operations
+                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First
+                                                                                                                       // element:
+                                                                                                                       // list
+                                                                                                                       // of
+                                                                                                                       // page
+                                                                                                                       // numbers
+                                                                                                                       // and
+                                                                                                                       // io
+                                                                                                                       // operations
                     int numeroDeReferencias = (int) arregloConDatos[1]; // Second element: NR value
                     int numeroDePaginas = (int) arregloConDatos[2]; // Third element: NP value
 
@@ -354,6 +371,81 @@ public class Main {
                 } else if (opcion == 4) {
                     recuperarMensajeDeImagen();
                 } else if (opcion == 5) {
+                    // Configuración de los tamaños de imagen, mensajes y marcos de página
+                    int[] tamaniosMensaje = { 100, 1000, 2000, 4000, 8000 };
+                    int[] tamaniosImagen = { 500, 1000 }; // Ejemplo de tamaños de imagen en píxeles
+                    int[] marcosDePagina = { 4, 8 };
+
+                    // Almacenar los resultados en una lista o matriz
+                    List<String> resultados = new ArrayList<>();
+
+                    // Iterar sobre los escenarios
+                    for (int tamanioImagen : tamaniosImagen) {
+                        for (int tamanioMensaje : tamaniosMensaje) {
+                            for (int marcos : marcosDePagina) {
+
+                                System.out.println("Ejecutando escenario: Imagen=" + tamanioImagen + "px, Mensaje="
+                                        + tamanioMensaje + " chars, Marcos=" + marcos);
+
+                                // Generar archivo de imagen y mensaje según el tamaño del mensaje
+                                String rutaImagen = "src/imgs/imagen_" + tamanioImagen + ".bmp";
+                                String archivoMensaje = "src/mensajes/mensaje_" + tamanioMensaje + ".txt";
+
+                                // Generar referencias para este escenario
+                                String archivoReferencias = "src/referencias/referencia_" + tamanioImagen + "_"
+                                        + tamanioMensaje + "_" + marcos + ".txt";
+                                generarReferencias(256, rutaImagen, archivoReferencias); // Asumiendo tamaño de página
+                                                                                         // de 256 bytes
+
+                                // Leer referencias generadas
+                                Object[] arregloConDatos = generarListaDeReferenciasYTamanios(archivoReferencias);
+                                ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0];
+                                int numeroDeReferencias = (int) arregloConDatos[1];
+                                int numeroDePaginas = (int) arregloConDatos[2];
+
+                                // Iniciar RAM y SWAP
+                                RAM ram = new RAM(marcos);
+                                SWAP swap = new SWAP(numeroDePaginas);
+                                swap.cargarSWAP();
+
+                                // Iniciar tablas de paginación
+                                TablaDePaginas tablaDePaginas = new TablaDePaginas(numeroDePaginas);
+                                TablaAuxiliar tablaAuxiliar = new TablaAuxiliar(numeroDePaginas);
+
+                                // Flag para detener el Thread 2
+                                FlagHayMasRefencias flagHayMasReferencias = new FlagHayMasRefencias(true);
+
+                                // Barrera para sincronización
+                                CyclicBarrier barrera = new CyclicBarrier(3);
+
+                                // Iniciar los threads
+                                Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar,
+                                        swap, ram, pageNumbersAndIO, numeroDeReferencias, barrera);
+                                Thread2 thread2 = new Thread2(flagHayMasReferencias, tablaDePaginas, barrera);
+
+                                thread1.start();
+                                thread2.start();
+
+                                try {
+                                    barrera.await(); // Esperamos que los hilos terminen
+
+                                    // Guardar resultados
+                                    String resultado = "Imagen=" + tamanioImagen + "px, Mensaje=" + tamanioMensaje
+                                            + " chars, Marcos=" + marcos
+                                            + ", Hits=" + thread1.getHits() + ", Misses=" + thread1.getMisses()
+                                            + ", Tiempo(ns)=" + thread1.getTiempoTotal();
+                                    resultados.add(resultado);
+
+                                } catch (InterruptedException | BrokenBarrierException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+
+                    // Exportar resultados a un archivo CSV
+                    exportarResultadosAArchivo(resultados, "src/resultados/resultados_pruebas.csv");
+                } else if (opcion == 0) {
                     continuar = false;
                 }
 
@@ -364,6 +456,20 @@ public class Main {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void exportarResultadosAArchivo(List<String> resultados, String rutaArchivo) {
+        try (FileWriter writer = new FileWriter(rutaArchivo)) {
+            writer.write("Escenario, Hits, Misses, Tiempo (ns)\n"); // Cabecera
+
+            for (String resultado : resultados) {
+                writer.write(resultado + "\n");
+            }
+
+            System.out.println("Resultados exportados correctamente a: " + rutaArchivo);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

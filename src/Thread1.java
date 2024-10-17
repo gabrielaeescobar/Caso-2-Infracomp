@@ -77,10 +77,10 @@ public class Thread1 extends Thread {
                     // System.out.print("Indice a remover segun NRU: ");
                     // System.out.println(indiceMarcoPaginaLibre);
                     //TODO Pegar a SWAP si se modificó la pagina que voy a eliminar:
-                    //if (IOOperation == 'W') {
+                    if (IOOperation == 'W') {
                         // Guardar la página en SWAP antes de eliminarla si fue modificada
-                      //  swap.savePagina(indiceMarcoPaginaLibre, ram.getMarcoDePagina(indiceMarcoPaginaLibre));
-                    //}
+                        swap.savePagina(indiceMarcoPaginaLibre, ram.getMarcoDePagina(indiceMarcoPaginaLibre));
+                    }
 
                     ram.getAndRemoverMarcoDePagina(indiceMarcoPaginaLibre);
                     ram.addMarcoDePagina(indiceMarcoPaginaLibre, paginaSWAP);
@@ -109,12 +109,24 @@ public class Thread1 extends Thread {
         System.out.print("Tiempo Total (ns) : ");
         System.out.println(tiempoTotal);
         System.out.print("Tiempo Total (segundos) : ");
-        System.out.println(tiempoTotal/1000000000);
+        System.out.println(tiempoTotal / 1_000_000_000.0);
         
         try {
             barrera.await();
         } catch (InterruptedException | BrokenBarrierException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getHits(){
+        return hits;
+    }
+
+    public int getMisses(){
+        return misses;
+    }
+
+    public long getTiempoTotal(){
+        return tiempoTotal;
     }
 }

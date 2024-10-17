@@ -11,6 +11,10 @@ public class SWAP {
         this.paginas = new int[tamanio];
     }
 
+    public void savePagina(int indicePagina, int contenidoPagina) {
+        paginas[indicePagina] = contenidoPagina;
+    }
+
     /**
      * Método para transformar todas las entradas de las páginas en la SWAP a 1
      */
