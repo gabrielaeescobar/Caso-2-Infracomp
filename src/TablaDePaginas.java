@@ -162,15 +162,9 @@ public class TablaDePaginas {
         if (pageToRemove == null) {
             return -1;
         }
-        
-        // Get the frame number to remove (second element of the page)
-        int frameToRemove = pageToRemove.get(1);
-        
-        // Remove the page from the page table
-        tablaDePaginas.remove(pageToRemove);
-        
+                
         // Return the frame number of the page to remove
-        return frameToRemove;
+        return pageToRemove.indexOf(pageToRemove.get(0));
     }
 
     // Helper function to find the entry with the lowest page number
