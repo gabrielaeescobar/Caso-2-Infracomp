@@ -57,9 +57,6 @@ public class Thread1 extends Thread {
                 } else {
                     //Aplicar NRU, el método pageIndexToRemove calcula el indice a remover según NRU:
                     indiceMarcoPaginaLibre = 0;
-                    System.out.print("Pagina a remover según NRU: ");
-                    System.out.println(indiceMarcoPaginaLibre);
-
 
                     ram.replaceMarcoDePagina(indiceMarcoPaginaLibre, page);
                     
