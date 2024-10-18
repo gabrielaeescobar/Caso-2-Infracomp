@@ -11,16 +11,6 @@ public class RAM {
 
 
     /**
-     * Retorna el contenido de un marco de página.
-     * @param indiceMarcoDePagina
-     * @return el contenido de una página
-     */
-    public int getMarcoDePagina(int indiceMarcoDePagina){
-        return marcosDePagina[indiceMarcoDePagina];
-    }
-
-
-    /**
      * Agrega una página al marco indicado
      * 
      * @param indiceMarcoDePagina
@@ -37,21 +27,12 @@ public class RAM {
 
 
     /**
-     * Libera el marco en el indiceMarcoDePagina indicado, y retorna el contenido.
+     * Reemplaza el contendio de marco de página con índice "indiceMarcoDePagina" por "pagina"
      * @param indiceMarcoDePagina
-     * @return El marco de página quitado.
+     * @param pagina
      */
-    public int getAndRemoverMarcoDePagina(int indiceMarcoDePagina){
-        
-        // Obtengo el marco de página que busco
-        int marcoDePagina =  marcosDePagina[indiceMarcoDePagina];
-        
-        // libero el marcoDePagina poniendolo como 0
-        marcosDePagina[indiceMarcoDePagina] = 0;
-        marcosOcupados--;
-
-        return marcoDePagina;
-
+    public void replaceMarcoDePagina(int indiceMarcoDePagina, int pagina){        
+        marcosDePagina[indiceMarcoDePagina] = pagina;
     }
 
     

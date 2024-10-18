@@ -1,23 +1,19 @@
+import java.util.ArrayList;
+
 public class TablaDePaginas {
     
     /**
-     * La tabla de páginas que contiene las entradas. Cada entrada de la tabla de página es un arreglo de 4 entradas así: [pageFrameNumber,abscentPresentBit,Rbit,Mbit]
-     * presentAbscentBit: If this bit is 1, the entry is valid and can be used. If it is 0, the virtual page to which the entry belongs
-     * is not currently in memory.
-     * pageFrameNumber: me dice en qué marco está la página que estoy buscando.
+     * La tabla de páginas que contiene las entradas. Cada entrada de la tabla de página es un arreglo de 4 entradas así: [pageNumber,pageFrameNumber,Rbit,Mbit]
+     * pageFrameNumber: me dice en qué marco está la página con pageNumber que estoy buscando.
      */
-    private int[][] tablaDePaginas;
-    private int tamanio;
+    private ArrayList<ArrayList<Integer>> tablaDePaginas;
 
     /**
      * Crea una tabla con tamanio entradas.
      * @param tamanio
      */
-    public TablaDePaginas(int tamanio){
-        //Cada entrada de la tabla de página es un arreglo de 4 entradas así: [pageFrameNumber,presentAbscentBit,Rbit,Mbit]. Al iniciar todas los valores son 0.
-        //Por lo que presentAbscentBit de todas las entradas va a ser 0 al iniciar.
-        this.tamanio = tamanio;
-        this.tablaDePaginas = new int[tamanio][4]; 
+    public TablaDePaginas(){
+        this.tablaDePaginas = new ArrayList<ArrayList<Integer>>(); 
     }
 
     /**
@@ -30,101 +26,162 @@ public class TablaDePaginas {
      * @return -1 si no está la página en RAM. de lo contrario el índice del marco de página en RAM
      * @pos Actualiza los bits R y M, si la página está en RAM.
      */
-    public synchronized int buscarMarcoPagina(int indicePagina, char OperacionIO){
-        //Si el presentAbscentBit es igual a 0, entonces la página que busco no está en RAM
-        if (tablaDePaginas[indicePagina][1]==0){
-            return -1;
-        
-        } else {
-            //Si la operación fue de lectura, solo actualiza el bit R.
+    public synchronized int buscarMarcoPagina(int pagina, char OperacionIO){
+
+        boolean paginaEnRAM = false;
+        // en entradaBuscada se guarda la entrada que se está buscando
+        // Cada entrada de la tabla de página es un arreglo de 4 entradas así: [pageNumber,pageFrameNumber,Rbit,Mbit]
+        ArrayList<Integer> entradaBuscada = new ArrayList<Integer>(4);
+
+        // Se gaurdará el índice de la entrada que contiene la página que busco
+        int i = 0;
+        while (!paginaEnRAM && i < tablaDePaginas.size()) {
+            
+            ArrayList<Integer> entradaI = tablaDePaginas.get(i);
+            
+            //obtengo pageNumber de la entrada i y reviso si corresponde a la que estoy buscando
+            if (entradaI.get(0).equals(pagina)) {
+                paginaEnRAM = true;
+                entradaBuscada = entradaI;
+            }
+            
+            i++; // increment the counter at the end of each iteration
+        }
+
+        //Si la pagina está en la RAM actualizamos los bits dependiendo de la operación
+        if (paginaEnRAM){
+            i--; //se incrementó una vez más
+            //Si la operación fue de lectura, solo actualiza el bit R (posición 2).
             if(OperacionIO =='R'){
-                tablaDePaginas[indicePagina][2] = 1;
+
+                entradaBuscada.set(2,1);
             
             //Si la operación fue de escritura actualizo el bit R y M.
             } else if (OperacionIO =='W'){
-                tablaDePaginas[indicePagina][2] = 1;
-                tablaDePaginas[indicePagina][3] = 1;
+                entradaBuscada.set(2,1);
+                entradaBuscada.set(3,1);
             }
-            return tablaDePaginas[indicePagina][0];
+
+            tablaDePaginas.set(i,entradaBuscada);
+
+            //retorno el indice del marco de página
+            return entradaBuscada.get(1);
+        
+        //Si la página no está retornamos -1
+        } else {
+            return -1;
         }
     }
 
     /**
      * Metodo que asigna un marco a una página en una TP.
-     * @param indicePagina
+     * @param pagina
      * @param indiceMarcoDePagina
      * @param OperacionIO: 'R' si es read, 'W' si es write.
      * @pos Asigna el indiceMarcoDePagina al indicePagina en la TP.
      */
-    public synchronized void asignarMarcoAPagina(int indicePagina, int indiceMarcoDePagina, char OperacionIO){
-        tablaDePaginas[indicePagina][0] = indiceMarcoDePagina;
-        //actualizamos presentAbscentBit, con lo cual la entrada es válida.
-        tablaDePaginas[indicePagina][1] = 1;
+    public synchronized void addEntrada(int pagina, int indiceMarcoDePagina, char OperacionIO){
+        //[pageNumber,pageFrameNumber,Rbit,Mbit]
+        ArrayList<Integer> nuevaEntrada = new ArrayList<Integer>(4);
+
+        nuevaEntrada.add(pagina);
+        nuevaEntrada.add(indiceMarcoDePagina);
         
-        //Si la operación fue de lectura, solo actualiza el bit R.
+        //Si la operación fue de lectura, el bit R = 1, bit M = 0.
         if(OperacionIO =='R'){
-            tablaDePaginas[indicePagina][2] = 1;
+            nuevaEntrada.add(1);
+            nuevaEntrada.add(0);
         
         //Si la operación fue de escritura actualizo el bit R y M.
         } else if (OperacionIO =='W'){
-            tablaDePaginas[indicePagina][2] = 1;
-            tablaDePaginas[indicePagina][3] = 1;
+            nuevaEntrada.add(1);
+            nuevaEntrada.add(1);
         }
 
+        tablaDePaginas.add(nuevaEntrada);
+
     }
+
 
     /**
      * Método que limpia los bits R a 0. Es invocado por el thread 2.
      * @pos actualiza todos los bits R a 0
      */
     public synchronized void clearRbit(){
-        //TODO Intentar optimizar para que no tenga que recorrer toda la tabla, porque al principio no hay necesidad
-        for(int i = 0; i< tamanio; i++){
-            tablaDePaginas[i][2] = 0;
+        
+        for(int i = 0; i< tablaDePaginas.size(); i++){
+            ArrayList<Integer> entrada = tablaDePaginas.get(i);
+            entrada.set(2,0);
+            tablaDePaginas.set(i,entrada);
         }
     }
-
 
     /**
-     * This method returns the index of the page to remove based on the NRU algorithm.
-     * It finds the page in the lowest nonempty class (class 0: [R=0, M=0], class 1: [R=0, M=1],
-     * class 2: [R=1, M=0], class 3: [R=1, M=1]) and returns the lowest index page from that class.
-     * 
-     * @return index of the page to remove.
+     * calcula el índice del marco de página a remover según el algoritmo NRU
+     * @return el índice del marco de página a remover
+     * @pos quita la entrada en la tabla de páginas asociada al marco de página calculado por NRU
      */
-    public synchronized int pageIndexToRemove() {
-        int pageToRemove = -1;
+    public synchronized int frameToRemoveNRU() {
+        // Create lists to store pages according to their class (0, 1, 2, 3)
+        ArrayList<ArrayList<Integer>> class0 = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> class1 = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> class2 = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> class3 = new ArrayList<>();
         
-        // Check class 0 (R=0, M=0)
-        for (int i = 0; i < tamanio; i++) {
-            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 0 && tablaDePaginas[i][3] == 0) {
-                return i;  // Return first match from class 0
+        // Classify pages based on R and M bits
+        for (ArrayList<Integer> entrada : tablaDePaginas) {
+            int Rbit = entrada.get(2);
+            int Mbit = entrada.get(3);
+            
+            if (Rbit == 0 && Mbit == 0) {
+                class0.add(entrada);
+            } else if (Rbit == 0 && Mbit == 1) {
+                class1.add(entrada);
+            } else if (Rbit == 1 && Mbit == 0) {
+                class2.add(entrada);
+            } else if (Rbit == 1 && Mbit == 1) {
+                class3.add(entrada);
             }
         }
-
-        // Check class 1 (R=0, M=1)
-        for (int i = 0; i < tamanio; i++) {
-            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 0 && tablaDePaginas[i][3] == 1) {
-                return i;  // Return first match from class 1
-            }
+        
+        
+        // Try to find the page to remove from the lowest non-empty class
+        ArrayList<Integer> pageToRemove = null;
+        
+        if (!class0.isEmpty()) {
+            pageToRemove = findLowestPageNumber(class0);
+        } else if (!class1.isEmpty()) {
+            pageToRemove = findLowestPageNumber(class1);
+        } else if (!class2.isEmpty()) {
+            pageToRemove = findLowestPageNumber(class2);
+        } else if (!class3.isEmpty()) {
+            pageToRemove = findLowestPageNumber(class3);
         }
-
-        // Check class 2 (R=1, M=0)
-        for (int i = 0; i < tamanio; i++) {
-            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 1 && tablaDePaginas[i][3] == 0) {
-                return i;  // Return first match from class 2
-            }
+    
+        // If no pages are found, return -1 (though in practice, this shouldn't happen)
+        if (pageToRemove == null) {
+            return -1;
         }
-
-        // Check class 3 (R=1, M=1)
-        for (int i = 0; i < tamanio; i++) {
-            if (tablaDePaginas[i][1] == 1 && tablaDePaginas[i][2] == 1 && tablaDePaginas[i][3] == 1) {
-                return i;  // Return first match from class 3
-            }
-        }
-
-        return pageToRemove;  // Return -1 if no page to remove is found (this shouldn't happen if the table is full)
+        
+        // Get the frame number to remove (second element of the page)
+        int frameToRemove = pageToRemove.get(1);
+        
+        // Remove the page from the page table
+        tablaDePaginas.remove(pageToRemove);
+        
+        // Return the frame number of the page to remove
+        return frameToRemove;
     }
 
-
+    // Helper function to find the entry with the lowest page number
+    private ArrayList<Integer> findLowestPageNumber(ArrayList<ArrayList<Integer>> classList) {
+        ArrayList<Integer> lowestPage = null;
+        for (ArrayList<Integer> entry : classList) {
+            if (lowestPage == null || entry.get(0) < lowestPage.get(0)) {
+                lowestPage = entry;
+            }
+        }
+        return lowestPage;
+    }
+    
 }

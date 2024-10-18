@@ -7,9 +7,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 public class Main {
-    private int hits;
-    private int misses;
-    private Imagen imagen;
+
     private static ArrayList<ReferenciaPagina> referencias = new ArrayList<>();
 
     // leer un archivo de texto y devolver el mensaje como un array de caracteres
@@ -196,11 +194,10 @@ public class Main {
 
     }
 
-    /**
+        /**
      * This method parses the file and returns an Object array:
      * - First element: List of pairs of pagenumber and IO operation ex: [0, 'W']
-     * - Second element: NR value
-     * - Third element: NP value
+     * - Second element: NP value
      * 
      * @param filePath The location of the .txt file
      * @return Object array containing pageNumbers, NR, and NP
@@ -209,7 +206,6 @@ public class Main {
     public static Object[] generarListaDeReferenciasYTamanios(String filePath) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         ArrayList<ArrayList<Object>> pageNumbersAndIO = new ArrayList<ArrayList<Object>>();
-        int NR = -1;
         int NP = -1;
 
         String line;
@@ -217,14 +213,11 @@ public class Main {
             line = line.trim();
 
             // Extract NR and NP from the beginning of the file
-            if (line.startsWith("NR=")) {
-                NR = Integer.parseInt(line.substring(3));
-            } else if (line.startsWith("NP=")) {
+            if (line.startsWith("NP=")) {
                 NP = Integer.parseInt(line.substring(3));
-            }
 
             // Process lines that match the 1st or 2nd possible formats
-            if (line.matches("Imagen\\[\\d+\\]\\[\\d+\\]\\.[RGB],\\d+,\\d+,[RW]")) {
+            } else if (line.matches("Imagen\\[\\d+\\]\\[\\d+\\]\\.[RGB],\\d+,\\d+,[RW]")) {
                 // Example: Imagen[0][0].R,0,0,R
                 String[] parts = line.split(",");
                 int pageNumber = Integer.parseInt(parts[1]);
@@ -253,7 +246,7 @@ public class Main {
         reader.close();
 
         // Return an Object array containing the pageNumbers, NR, and NP
-        return new Object[] { pageNumbersAndIO, NR, NP };
+        return new Object[] { pageNumbersAndIO, NP };
     }
 
     // correr la simulación
@@ -311,35 +304,19 @@ public class Main {
                     System.out.println("Ingrese el nombre del archivo de referencias (sin el .txt): ");
                     String nombreDelArchivoDeReferencias = br.readLine();
 
-                    String rutaAlArchivo = "src/referencias/" + nombreDelArchivoDeReferencias + ".txt"; // Ruta del
-                                                                                                        // archivo de
-                                                                                                        // referencias
+                    String rutaAlArchivo = "src/referencias/" + nombreDelArchivoDeReferencias + ".txt";  // Ruta del archivo de referencias
 
                     // Arreglo con la lista de referencias, Numero de referencias, Numero de Paginas
                     Object[] arregloConDatos = generarListaDeReferenciasYTamanios(rutaAlArchivo);
 
                     // Extraer los datos del arreglo
-                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First
-                                                                                                                       // element:
-                                                                                                                       // list
-                                                                                                                       // of
-                                                                                                                       // page
-                                                                                                                       // numbers
-                                                                                                                       // and
-                                                                                                                       // io
-                                                                                                                       // operations
-                    int numeroDeReferencias = (int) arregloConDatos[1]; // Second element: NR value
-                    int numeroDePaginas = (int) arregloConDatos[2]; // Third element: NP value
+                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First element: list of page numbers and io operations
 
-                    // Iniciar RAM Y SWAP
+                    // Iniciar RAM 
                     RAM ram = new RAM(numeroMarcosPagina);
-                    SWAP swap = new SWAP(numeroDePaginas);
-                    // cargamos la SWAP con todos las paginas
-                    swap.cargarSWAP();
 
                     // Iniciamos tablas
-                    TablaDePaginas tablaDePaginas = new TablaDePaginas(numeroDePaginas);
-                    TablaAuxiliar tablaAuxiliar = new TablaAuxiliar(numeroDePaginas);
+                    TablaDePaginas tablaDePaginas = new TablaDePaginas();
 
                     // flag para indicar al thread 2, cuándo debe parar. Cuando el thread 1 termine
                     // de leer las referencias, marca este flag como false
@@ -350,8 +327,8 @@ public class Main {
                     CyclicBarrier barrera = new CyclicBarrier(3);
 
                     // Thread que se encarga de resolver las referencias
-                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar, swap, ram,
-                            pageNumbersAndIO, numeroDeReferencias, barrera);
+                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, ram,
+                            pageNumbersAndIO, barrera);
                     // Thread que actualiza el bit R de cada entrada
                     Thread2 thread2 = new Thread2(flagHayMasReferencias, tablaDePaginas, barrera);
 
@@ -421,28 +398,27 @@ public class Main {
 
                                     // Leer referencias generadas
                                     Object[] arregloConDatos = generarListaDeReferenciasYTamanios(archivoReferencias);
-                                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0];
-                                    int numeroDeReferencias = (int) arregloConDatos[1];
-                                    int numeroDePaginas = (int) arregloConDatos[2];
+                                    // Extraer los datos del arreglo
+                                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First element: list of page numbers and io operations
 
-                                    // Iniciar RAM y SWAP
+                                    // Iniciar RAM
                                     RAM ram = new RAM(marcos);
-                                    SWAP swap = new SWAP(numeroDePaginas);
-                                    swap.cargarSWAP();
 
-                                    // Iniciar tablas de paginación
-                                    TablaDePaginas tablaDePaginas = new TablaDePaginas(numeroDePaginas);
-                                    TablaAuxiliar tablaAuxiliar = new TablaAuxiliar(numeroDePaginas);
+                                    // Iniciamos tablas
+                                    TablaDePaginas tablaDePaginas = new TablaDePaginas();
 
-                                    // Flag para detener el Thread 2
+                                    // flag para indicar al thread 2, cuándo debe parar. Cuando el thread 1 termine
+                                    // de leer las referencias, marca este flag como false
                                     FlagHayMasRefencias flagHayMasReferencias = new FlagHayMasRefencias(true);
 
-                                    // Barrera para sincronización
+                                    // Utilizo barrera para que se muestre el menú cuando ya todos los threads
+                                    // terminen
                                     CyclicBarrier barrera = new CyclicBarrier(3);
 
-                                    // Iniciar los threads
-                                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, tablaAuxiliar,
-                                            swap, ram, pageNumbersAndIO, numeroDeReferencias, barrera);
+                                    // Thread que se encarga de resolver las referencias
+                                    Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, ram,
+                                            pageNumbersAndIO, barrera);
+                                    // Thread que actualiza el bit R de cada entrada
                                     Thread2 thread2 = new Thread2(flagHayMasReferencias, tablaDePaginas, barrera);
 
                                     thread1.start();
