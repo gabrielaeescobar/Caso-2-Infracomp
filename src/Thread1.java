@@ -15,6 +15,12 @@ public class Thread1 extends Thread {
     private int hits = 0;
     private int misses = 0;
     private long tiempoTotal = 0;  // Tiempo en nanosegundos
+    private double tiempoTodoEnRam;
+    private double tiempoTodoEnSWAP;
+    private double porcentajeHits;
+    private double porcentajeMisses;
+    
+
 
 
     public Thread1(FlagHayMasRefencias flagHayMasReferencias, TablaDePaginas tablaDePaginas, RAM ram, ArrayList<ArrayList<Object>> pageNumbersAndIO, CyclicBarrier barrera){
@@ -87,8 +93,8 @@ public class Thread1 extends Thread {
 
         int totalReferencias = hits+misses;
         
-        double porcentajeHits = ( (double) hits/totalReferencias)*100;
-        double porcentajeMisses = 100-porcentajeHits;
+        porcentajeHits = ( (double) hits/totalReferencias)*100;
+        porcentajeMisses = 100-porcentajeHits;
         System.out.print("Porcentaje hits: ");
         System.out.println(String.format("%.2f", porcentajeHits) + " %");
         System.out.print("Porcentaje misses: ");
@@ -105,8 +111,8 @@ public class Thread1 extends Thread {
         System.out.println(tiempoS);
 
         //Tiempo si todas las referencias estuviesen en RAM y en SWAP
-        double tiempoTodoEnRam = (double)(totalReferencias*25)/1_000_000; // en ms
-        double tiempoTodoEnSWAP = totalReferencias*10; // en ms
+        tiempoTodoEnRam = (double)(totalReferencias*25)/1_000_000; // en ms
+        tiempoTodoEnSWAP = totalReferencias*10; // en ms
         System.out.print("Tiempo si todas las referencias estuvieran en RAM: ");
         System.out.println(String.format("%.2f", tiempoTodoEnRam) + " ms");
         System.out.print("Tiempo si todas las referencias estuvieran en SWAP: ");
@@ -132,5 +138,19 @@ public class Thread1 extends Thread {
         return tiempoTotal;
     }
 
+    public double getPorcentajeHits(){
+        return porcentajeHits;
+    }
 
+    public double getPorcentajeMisses(){
+        return porcentajeMisses;
+    }
+
+    public double getTiempoTodoEnRam(){
+        return tiempoTodoEnRam;
+    }
+
+    public double getTiempoTodoEnSWAP(){
+        return tiempoTodoEnSWAP;
+    }
 }
