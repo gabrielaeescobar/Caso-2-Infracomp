@@ -78,14 +78,40 @@ public class Thread1 extends Thread {
 
         //cuando termine actualizamos flag
         flagHayMasReferencias.setflagHayMasReferencias(false);
-        System.out.print("Hits :");
+        System.out.print("Hits: ");
         System.out.println(hits);
-        System.out.print("Misses :");
+        System.out.print("Misses: ");
         System.out.println(misses);
-        System.out.print("Tiempo Total (ns) : ");
+
+        //Porcentajes:
+
+        int totalReferencias = hits+misses;
+        
+        double porcentajeHits = ( (double) hits/totalReferencias)*100;
+        double porcentajeMisses = 100-porcentajeHits;
+        System.out.print("Porcentaje hits: ");
+        System.out.println(String.format("%.2f", porcentajeHits) + " %");
+        System.out.print("Porcentaje misses: ");
+        System.out.println(String.format("%.2f", porcentajeMisses) + " %");
+
+        // Tiempo efectivo
+        double tiempoMs = tiempoTotal/1_000_000.0;
+        double tiempoS = tiempoMs/1_000.0;
+        System.out.print("Tiempo Total (ns): ");
         System.out.println(tiempoTotal);
-        System.out.print("Tiempo Total (segundos) : ");
-        System.out.println(tiempoTotal / 1_000_000_000.0);
+        System.out.print("Tiempo Total (ms): ");
+        System.out.println(tiempoMs);
+        System.out.print("Tiempo Total (segundos): ");
+        System.out.println(tiempoS);
+
+        //Tiempo si todas las referencias estuviesen en RAM y en SWAP
+        double tiempoTodoEnRam = (double)(totalReferencias*25)/1_000_000; // en ms
+        double tiempoTodoEnSWAP = totalReferencias*10; // en ms
+        System.out.print("Tiempo si todas las referencias estuvieran en RAM: ");
+        System.out.println(String.format("%.2f", tiempoTodoEnRam) + " ms");
+        System.out.print("Tiempo si todas las referencias estuvieran en SWAP: ");
+        System.out.println(tiempoTodoEnSWAP + " ms");
+
         
         try {
             barrera.await();
