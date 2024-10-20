@@ -18,7 +18,6 @@ public class RAM {
      * @pre la entrada en el indiceMarcoDePagina debería estar en 0, es decir, es la primera vez que se pone una página en el marco indicado o 
      * se llamó el método getAndRemoverMarcoDePagina anteriormente
      */
-
     public void addMarcoDePagina(int indiceMarcoDePagina, int pagina){
         // Pongo el contenido de una página en el marco indicado
         marcosDePagina[indiceMarcoDePagina] = pagina;
