@@ -1,5 +1,0 @@
-Escenario,Pagesize (byte),Imagen (px),Mensaje (chars),Marcos,Hits,Misses,Tiempo (ns)
-PageSize=256bytes, Imagen=256px, Mensaje=100 chars, Marcos=4, Hits=1745, Misses=5, Tiempo(ns)=50043625
-PageSize=256bytes, Imagen=256px, Mensaje=100 chars, Marcos=8, Hits=1745, Misses=5, Tiempo(ns)=50043625
-PageSize=256bytes, Imagen=256px, Mensaje=1000 chars, Marcos=4, Hits=17048, Misses=36, Tiempo(ns)=360426200
-PageSize=256bytes, Imagen=256px, Mensaje=1000 chars, Marcos=8, Hits=17048, Misses=36, Tiempo(ns)=360426200

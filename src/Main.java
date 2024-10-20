@@ -181,7 +181,7 @@ public class Main {
         escribirArchivoReferencias(archivoResultado, referencias, tamanioPagina, alto, ancho, NR, NP);
     }
 
-    // escirbir las referencias generadas en un archivo
+    // escribir las referencias generadas en un archivo
     public static void escribirArchivoReferencias(String archivoSalida, ArrayList<ReferenciaPagina> referencias, int tp,
             int nf, int nc, int nr, int np) {
         try (FileWriter writer = new FileWriter(archivoSalida)) {
@@ -199,11 +199,7 @@ public class Main {
         }
     }
 
-    public void simularPaginacion(int numMarcos, String archivoReferencias) {
-
-    }
-
-        /**
+    /**
      * This method parses the file and returns an Object array:
      * - First element: List of pairs of pagenumber and IO operation ex: [0, 'W']
      * - Second element: NP value
@@ -225,7 +221,7 @@ public class Main {
             if (line.startsWith("NP=")) {
                 NP = Integer.parseInt(line.substring(3));
 
-            // Process lines that match the 1st or 2nd possible formats
+                // Process lines that match the 1st or 2nd possible formats
             } else if (line.matches("Imagen\\[\\d+\\]\\[\\d+\\]\\.[RGB],\\d+,\\d+,[RW]")) {
                 // Example: Imagen[0][0].R,0,0,R
                 String[] parts = line.split(",");
@@ -286,14 +282,11 @@ public class Main {
                     System.out.println("Ingrese el tamaño de página (en bytes): ");
                     int tamanioPagina = Integer.parseInt(br.readLine());
 
-                    // Cambio 1: Se cambia para ingresar solo el nombre del archivo, la ruta se
-                    // gestiona internamente
                     System.out.println(
                             "Nombre del archivo con la imagen que contiene el mensaje escondido (sin ruta ni extension, por ejemplo: caso2-parrots_mod): ");
                     String archivoImagen = br.readLine();
                     String rutaArchivoImagen = "src/imgs/" + archivoImagen + ".bmp"; // Asignación de ruta
 
-                    // Mejorar la ruta de salida para el archivo de referencias
                     System.out.println(
                             "Nombre del archivo de salida para las referencias (sin .txt, por ejemplo: ref_parrots): ");
                     String archivoRespta = br.readLine();
@@ -303,25 +296,31 @@ public class Main {
 
                     System.out.println("El documento fue creado correctamente en la carpeta referencias.");
 
-                    System.out.println("El documento fue creado correctamente.");
-
                 } else if (opcion == 2) {
                     System.out.println("Ingrese el número de marcos de página: ");
                     int numeroMarcosPagina = Integer.parseInt(br.readLine());
 
-                    // Cambio 2: Mejoramos la forma en la que se manejan las rutas
                     System.out.println("Ingrese el nombre del archivo de referencias (sin el .txt): ");
                     String nombreDelArchivoDeReferencias = br.readLine();
-
-                    String rutaAlArchivo = "src/referencias/" + nombreDelArchivoDeReferencias + ".txt";  // Ruta del archivo de referencias
+                    String rutaAlArchivo = "src/referencias/" + nombreDelArchivoDeReferencias + ".txt"; // Ruta del
+                                                                                                        // archivo de
+                                                                                                        // referencias
 
                     // Arreglo con la lista de referencias, Numero de referencias, Numero de Paginas
                     Object[] arregloConDatos = generarListaDeReferenciasYTamanios(rutaAlArchivo);
 
                     // Extraer los datos del arreglo
-                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First element: list of page numbers and io operations
+                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First
+                                                                                                                       // element:
+                                                                                                                       // list
+                                                                                                                       // of
+                                                                                                                       // page
+                                                                                                                       // numbers
+                                                                                                                       // and
+                                                                                                                       // io
+                                                                                                                       // operations
 
-                    // Iniciar RAM 
+                    // Iniciar RAM
                     RAM ram = new RAM(numeroMarcosPagina);
 
                     // Iniciamos tablas
@@ -362,30 +361,33 @@ public class Main {
                 } else if (opcion == 4) {
                     recuperarMensajeDeImagen();
                 } else if (opcion == 5) {
+
+                    System.out.println("Ingrese el tamaño página a usar ej (256, 512, 1024): ");
+                    int tamanioPagina = Integer.parseInt(br.readLine());
+
                     // Configuración de los tamaños de imagen, mensajes y marcos de página
-                    int[] tamaniosPagina = { 256, 512, 1024}; // Ejemplo de tamaños de página en bytes
                     int[] tamaniosMensaje = { 100, 1000, 2000, 4000, 8000 };
                     int[] tamaniosImagen = { 256, 426 }; // Ejemplo de tamaños de imagen en píxeles
                     int[] marcosDePagina = { 4, 8 };
 
                     // Ruta del archivo de resultados
-                    String rutaArchivoResultados = "resultados_pruebas.csv";
+                    String rutaArchivoResultados = "resultados_pruebas" + tamanioPagina + ".csv";
 
                     // Almacenar los resultados en una lista o matriz
                     List<String> resultados = new ArrayList<>();
 
                     try (FileWriter writer = new FileWriter(rutaArchivoResultados)) {
                         // Escribir la cabecera del archivo CSV
-                        writer.write("Escenario,Pagesize (byte),Imagen (px),Mensaje (chars),Marcos,Hits,Misses,Tiempo (ns)\n");
-                
+                        writer.write(
+                                "Pagesize (bytes),Imagen (px),Mensaje (chars),# Marcos,# Hits,# Misses,% de Hits,% de Misses,Tiempo real (ns),Tiempo en RAM (ns),Tiempo en Swap (ns)\n");
 
-                    // Iterar sobre los escenarios
-                    for (int tamanioPagina : tamaniosPagina) {
+                        // Iterar sobre los escenarios
                         for (int tamanioImagen : tamaniosImagen) {
                             for (int tamanioMensaje : tamaniosMensaje) {
                                 for (int marcos : marcosDePagina) {
 
-                                    System.out.println("Ejecutando escenario:pagesize= "+ tamanioPagina +"Imagen=" + tamanioImagen + "px, Mensaje="
+                                    System.out.println("Ejecutando escenario:pagesize= " + tamanioPagina + "Imagen="
+                                            + tamanioImagen + "px, Mensaje="
                                             + tamanioMensaje + " chars, Marcos=" + marcos);
 
                                     // Busca la imagen sin modificar
@@ -400,31 +402,29 @@ public class Main {
                                     // Generar referencias para este escenario
                                     String archivoReferencias = "src/referencias/referencia_" + tamanioImagen + "_"
                                             + tamanioMensaje + "_" + marcos + ".txt";
-                                    generarReferencias(tamanioPagina, rutaImagen_mod, archivoReferencias); // Asumiendo
-                                                                                                       // tamaño de
-                                                                                                       // página
-                                    // de 256 bytes
+                                    generarReferencias(tamanioPagina, rutaImagen_mod, archivoReferencias);
 
                                     // Leer referencias generadas
                                     Object[] arregloConDatos = generarListaDeReferenciasYTamanios(archivoReferencias);
                                     // Extraer los datos del arreglo
-                                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First element: list of page numbers and io operations
+                                    ArrayList<ArrayList<Object>> pageNumbersAndIO = (ArrayList<ArrayList<Object>>) arregloConDatos[0]; // First
+                                                                                                                                       // element:
+                                                                                                                                       // list
+                                                                                                                                       // of
+                                                                                                                                       // page
+                                                                                                                                       // numbers
+                                                                                                                                       // and
+                                                                                                                                       // io
+                                                                                                                                       // operations
 
-                                    // Iniciar RAM
                                     RAM ram = new RAM(marcos);
 
-                                    // Iniciamos tablas
                                     TablaDePaginas tablaDePaginas = new TablaDePaginas();
 
-                                    // flag para indicar al thread 2, cuándo debe parar. Cuando el thread 1 termine
-                                    // de leer las referencias, marca este flag como false
                                     FlagHayMasRefencias flagHayMasReferencias = new FlagHayMasRefencias(true);
 
-                                    // Utilizo barrera para que se muestre el menú cuando ya todos los threads
-                                    // terminen
                                     CyclicBarrier barrera = new CyclicBarrier(3);
 
-                                    // Thread que se encarga de resolver las referencias
                                     Thread1 thread1 = new Thread1(flagHayMasReferencias, tablaDePaginas, ram,
                                             pageNumbersAndIO, barrera);
                                     // Thread que actualiza el bit R de cada entrada
@@ -437,10 +437,15 @@ public class Main {
                                         barrera.await(); // Esperamos que los hilos terminen
 
                                         // Guardar resultados
-                                        String resultado ="PageSize="+tamanioPagina + "bytes, Imagen=" + tamanioImagen + "px, Mensaje=" + tamanioMensaje
-                                                + " chars, Marcos=" + marcos
-                                                + ", Hits=" + thread1.getHits() + ", Misses=" + thread1.getMisses()
-                                                + ", Tiempo(ns)=" + thread1.getTiempoTotal()+"\n";
+                                        String resultado = tamanioPagina + ","
+                                                + tamanioImagen + "," + tamanioMensaje
+                                                + "," + marcos  + "," + thread1.getHits()
+                                                + "," + thread1.getMisses()
+                                                + "," + thread1.getPorcentajeHits()
+                                                + "," + thread1.getPorcentajeMisses()
+                                                + "," + thread1.getTiempoTotal()
+                                                + "," + thread1.getTiempoTodoEnRam()
+                                                + "," + thread1.getTiempoTodoEnSWAP() + "\n";
                                         resultados.add(resultado);
                                         writer.write(resultado);
                                         writer.flush(); // Asegurar que se escriban los datos en el archivo
@@ -451,10 +456,10 @@ public class Main {
                                 }
                             }
                         }
-                    }
 
-                    // Exportar resultados a un archivo CSV
-                    exportarResultadosAArchivo(resultados, "src/resultados/resultados_pruebas.csv");}
+                        // Exportar resultados a un archivo CSV
+                        exportarResultadosAArchivo(resultados, "src/resultados/resultados_pruebas.csv");
+                    }
                 } else if (opcion == 0) {
                     continuar = false;
                 }
