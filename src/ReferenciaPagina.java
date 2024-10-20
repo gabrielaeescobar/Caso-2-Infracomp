@@ -1,6 +1,7 @@
 public class ReferenciaPagina {
     private int paginaVirtual;
     private int desplazamiento;
+    private int posicion;
     private String tipo; // Indica si es una referencia a la imagen o al mensaje
     private int fila; // Para la imagen, la fila del píxel
     private int columna; // Para la imagen, la columna del píxel
@@ -17,9 +18,10 @@ public class ReferenciaPagina {
     }
 
     // Constructor para las referencias del mensaje
-    public ReferenciaPagina(int paginaVirtual, int desplazamiento) {
+    public ReferenciaPagina(int paginaVirtual, int desplazamiento, int posicion) {
         this.paginaVirtual = paginaVirtual;
         this.desplazamiento = desplazamiento;
+        this.posicion = posicion;
         this.tipo = "Mensaje";
     }
 
@@ -29,7 +31,7 @@ public class ReferenciaPagina {
         if (tipo.equals("Imagen")) {
             return tipo + "[" + fila + "][" + columna + "]." + color + "," + paginaVirtual + "," + desplazamiento + ",R";
         } else {
-            return tipo + "[" + desplazamiento + "]," + paginaVirtual + "," + desplazamiento + ",W";
+            return tipo + "[" + posicion + "]," + paginaVirtual + "," + desplazamiento + ",W";
         }
     }
 }

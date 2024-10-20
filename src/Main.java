@@ -124,13 +124,19 @@ public class Main {
 
         // PASO2: alternar la w del msj y la r de la img
         int bitIndex = 0;
-        int desplazamientoMsj = 0;
+        int posicionMsj = 0;
         int byteMsg = 0;
+        int desplazamientoMsj = 0;
+
 
         while (contadorReferencia < NR) {
+            if (desplazamientoMsj == tamanioPagina){
+                desplazamientoMsj=0;
+            }
             // escribir en el mensaje (W)
-            int paginaVirtualMsg = numPaginasImagen + (desplazamientoMsj / tamanioPagina);
-            referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj));
+            int paginaVirtualMsg = numPaginasImagen + (posicionMsj / tamanioPagina);
+
+            referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj, posicionMsj));
             contadorReferencia++;
 
             // leer de la imagen (R)
@@ -153,8 +159,9 @@ public class Main {
 
             // verificacion de la escritura adicional después de 8 bits
             if (bitIndex % 8 == 0 && contadorReferencia < NR) {
-                referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj));
+                referencias.add(new ReferenciaPagina(paginaVirtualMsg, desplazamientoMsj, posicionMsj));
                 desplazamientoMsj++;
+                posicionMsj++;
                 contadorReferencia++;
             }
 
@@ -162,6 +169,8 @@ public class Main {
             if (bitIndex % 8 == 0) {
                 byteMsg++;
             }
+        
+
         }
 
         // verificiacion de si hicimos exactamente NR referencias
